@@ -15,7 +15,10 @@ alarm_layout = html.Div([
         # Temperature In
         html.Div([
             html.Div([
-                html.H5("Temperature In (°C)", className="param-title"),
+                html.Div([
+                    html.H5("Temperature In (°C)", className="param-title"),
+                    html.Div(id="temp-in-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),
@@ -32,7 +35,10 @@ alarm_layout = html.Div([
         # Humidity In
         html.Div([
             html.Div([
-                html.H5("Humidity In (%)", className="param-title"),
+                html.Div([
+                    html.H5("Humidity In (%)", className="param-title"),
+                    html.Div(id="humidity-in-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),
@@ -49,7 +55,10 @@ alarm_layout = html.Div([
         # Temperature Out
         html.Div([
             html.Div([
-                html.H5("Temp Out (°C)", className="param-title"),
+                html.Div([
+                    html.H5("Temperature Out (°C)", className="param-title"),
+                    html.Div(id="temp-out-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),
@@ -69,7 +78,10 @@ alarm_layout = html.Div([
         # Humidity Out
         html.Div([
             html.Div([
-                html.H5("Humidity Out (%)", className="param-title"),
+                html.Div([
+                    html.H5("Humidity Out (%)", className="param-title"),
+                    html.Div(id="humidity-out-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),
@@ -86,7 +98,10 @@ alarm_layout = html.Div([
         # PAR
         html.Div([
             html.Div([
-                html.H5("PAR (μmol/m²/s)", className="param-title"),
+                html.Div([
+                    html.H5("PAR (μmol/m²/s)", className="param-title"),
+                    html.Div(id="par-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),
@@ -103,7 +118,10 @@ alarm_layout = html.Div([
         # CO2
         html.Div([
             html.Div([
-                html.H5("CO2 (PPM)", className="param-title"),
+                html.Div([
+                    html.H5("CO2 (PPM)", className="param-title"),
+                    html.Div(id="co2-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),
@@ -123,7 +141,10 @@ alarm_layout = html.Div([
         # Windspeed
         html.Div([
             html.Div([
-                html.H5("Windspeed (m/s)", className="param-title"),
+                html.Div([
+                    html.H5("Windspeed (m/s)", className="param-title"),
+                    html.Div(id="windspeed-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),
@@ -140,7 +161,10 @@ alarm_layout = html.Div([
         # Rainfall
         html.Div([
             html.Div([
-                html.H5("Rainfall (mm)", className="param-title"),
+                html.Div([
+                    html.H5("Rainfall (mm)", className="param-title"),
+                    html.Div(id="rainfall-circle", className="status-circle")
+                ], className="title-with-circle"),
                 html.Div([
                     html.Div([
                         html.Strong("kodeAlarm:", className="me-2"),

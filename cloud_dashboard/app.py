@@ -116,7 +116,7 @@ def logout():
 # end of flask route
 
 # Integrate Dash app
-app_dash = dash.Dash(__name__, server=server, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP], title='MCS Dashboard', suppress_callback_exceptions=True)
+app_dash = dash.Dash(__name__, server=server, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP], title='MCS Dashboard', suppress_callback_exceptions=True, assets_folder='assets')
  
 @app_dash.server.before_request
 def restrict_dash_pages():
@@ -1488,45 +1488,68 @@ def update_gps_data(n_intervals):
     
     return fig, location_name, coordinates_text
 
-# Alarm Callback
+# Updated Alarm Callback with Circle Status
 @app_dash.callback(
     [Output("temp-in-alarm", "children"),
      Output("temp-in-berita", "children"),
+     Output("temp-in-circle", "className"),
      Output("humidity-in-alarm", "children"),
      Output("humidity-in-berita", "children"),
+     Output("humidity-in-circle", "className"),
      Output("temp-out-alarm", "children"),
      Output("temp-out-berita", "children"),
+     Output("temp-out-circle", "className"),
      Output("humidity-out-alarm", "children"),
      Output("humidity-out-berita", "children"),
+     Output("humidity-out-circle", "className"),
      Output("par-alarm", "children"),
      Output("par-berita", "children"),
+     Output("par-circle", "className"),
      Output("co2-alarm", "children"),
      Output("co2-berita", "children"),
+     Output("co2-circle", "className"),
      Output("windspeed-alarm", "children"),
      Output("windspeed-berita", "children"),
+     Output("windspeed-circle", "className"),
      Output("rainfall-alarm", "children"),
-     Output("rainfall-berita", "children")],
+     Output("rainfall-berita", "children"),
+     Output("rainfall-circle", "className")],
     [Input("interval-alarm", "n_intervals")]
 )
-def update_alarm_values(n):    
-    # print(alarm_data['kodeAlarmSuhuIn'])
+def update_alarm_values(n):
+    def get_circle_class(kode_alarm):
+        if kode_alarm in [1, 4]:
+            return "status-circle status-red"
+        elif kode_alarm in [2, 3]:
+            return "status-circle status-yellow"
+        else:  # kode_alarm == 0
+            return "status-circle status-green"
+    
     return (
         alarm_data['kodeAlarmSuhuIn'],
         alarm_data['beritaSuhuIn'],
+        get_circle_class(alarm_data['kodeAlarmSuhuIn']),
         alarm_data['kodeAlarmKelembabanIn'],
         alarm_data['beritaKelembabanIn'],
+        get_circle_class(alarm_data['kodeAlarmKelembabanIn']),
         alarm_data['kodeAlarmSuhuOut'],
         alarm_data['beritaSuhuOut'],
+        get_circle_class(alarm_data['kodeAlarmSuhuOut']),
         alarm_data['kodeAlarmKelembabanOut'],
         alarm_data['beritaKelembabanOut'],
+        get_circle_class(alarm_data['kodeAlarmKelembabanOut']),
         alarm_data['kodeAlarmPar'],
         alarm_data['beritaPar'],
+        get_circle_class(alarm_data['kodeAlarmPar']),
         alarm_data['kodeAlarmCo2'],
         alarm_data['beritaCo2'],
+        get_circle_class(alarm_data['kodeAlarmCo2']),
         alarm_data['kodeAlarmWindspeed'],
         alarm_data['beritaWindspeed'],
+        get_circle_class(alarm_data['kodeAlarmWindspeed']),
         alarm_data['kodeAlarmRainfall'],
-        alarm_data['beritaRainfall']
+        alarm_data['beritaRainfall'],
+        get_circle_class(alarm_data['kodeAlarmRainfall'])
     )
 
 # Run server
