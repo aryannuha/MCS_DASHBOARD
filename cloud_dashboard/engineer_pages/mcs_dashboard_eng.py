@@ -120,7 +120,7 @@ engineer_dashboard_layout = html.Div([
 
                 # Button Section
                 html.Div([
-                    html.Button("SETTING", className="btn btn-secondary m-1"),
+                    # html.Button("SETTING", className="btn btn-secondary m-1"),
                     html.A("DOWNLOAD", href=f"{ESP_IP}/download", className="btn btn-secondary m-1", target="_blank"),
                     dcc.Link("T&H INDOOR", href="/dash/engineer/th-in", className="btn btn-secondary m-1"),
                     dcc.Link("PAR", href="/dash/engineer/par", className="btn btn-secondary m-1"),
