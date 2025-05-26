@@ -190,15 +190,8 @@ def generate_path_points(center_lat, center_lon, points=10, radius=0.005):
 PATH_POINTS = generate_path_points(-6.914744, 107.609810, points=20)
 
 # MQTT Configuration
-BROKER = "9a59e12602b646a292e7e66a5296e0ed.s1.eu.hivemq.cloud"
-PORT = 8883
-USERNAME = "testing"
-PASSWORD = "Testing123"
-
-# Create SSL/TLS context
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
+BROKER = "192.168.0.141"
+PORT = 1883
 
 # TOPIC FOR DATA
 TOPIC_SUHU = "mcs/kodeDataSuhuIn"
@@ -298,8 +291,6 @@ def on_message(client, userdata, msg):
 
 # MQTT Client
 client = mqtt.Client()
-client.username_pw_set(USERNAME, PASSWORD)
-client.tls_set_context(ssl_context)
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(BROKER, PORT, 60)
