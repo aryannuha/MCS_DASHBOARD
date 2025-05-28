@@ -92,7 +92,18 @@ rainfall_layout = html.Div([
             ], width=6, className="ps-3")
         ])
     ], className="container"),
+
+    # FOOTER
+    html.Footer([
+        html.Div([
+            html.P([
+                "© Ammar Aryan Nuha 221311008 • Created with ",
+                html.Span("♥", className="love-symbol"),
+                " for Microclimate System"
+            ], className="footer-text mb-0")
+        ], className="container text-center")
+    ], className="footer-section"),
     
     # Keep the interval component for data updates
     dcc.Interval(id='interval_rainfall', interval=1200, n_intervals=0)
-], className="dashboard-container")
+])

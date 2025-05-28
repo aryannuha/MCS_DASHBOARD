@@ -78,5 +78,16 @@ engineer_gps_layout = html.Div([
         ], className="d-flex flex-wrap justify-content-end mb-4")
     ], className="container"),
     
+    # FOOTER
+    html.Footer([
+        html.Div([
+            html.P([
+                "© Ammar Aryan Nuha 221311008 • Created with ",
+                html.Span("♥", className="love-symbol"),
+                " for Microclimate System"
+            ], className="footer-text mb-0")
+        ], className="container text-center")
+    ], className="footer-section"),
+
     dcc.Interval(id='interval_gps', interval=1200, n_intervals=0)
-], className="dashboard-container")
+])

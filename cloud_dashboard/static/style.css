@@ -351,6 +351,42 @@ body {
   background-color: #23272b;
 }
 
+/* Footer Styling */
+.footer-section {
+  background-color: var(--card-bg);
+  margin-top: 40px;
+  padding: 20px 0;
+  box-shadow: inset 0 4px 8px var(--shadow-dark),
+              inset 0 -4px 8px var(--shadow-light);
+  border-top: 1px solid rgba(163, 177, 198, 0.2);
+}
+
+.footer-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 2px var(--shadow-light);
+  opacity: 0.9;
+}
+
+.love-symbol {
+  color: var(--danger); 
+  font-size: 1.1rem;
+  display: inline-block; 
+  animation: heartbeat 1.5s ease-in-out infinite;
+  text-shadow: 0 0 4px rgba(231, 76, 60, 0.3);
+  transform-origin: center; 
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1.2); }
+  75% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
 /* Graph Container Styling */
 #temp-graph, #humidity-graph, #temp-graph-out, #humidity-graph-out, #windspeed-graph,
   #co2-graph, #par-graph, #rainfall-graph {
@@ -438,6 +474,10 @@ body {
   #temp-graph, #humidity-graph {
     height: 140px !important;
   }
+
+  .footer-text {
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -501,6 +541,14 @@ body {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
+
+  .footer-text {
+    font-size: 0.8rem;
+  }
+
+  .footer-section {
+    padding: 15px 0;
+  }
 }
 
 @media (max-width: 576px) {
@@ -554,6 +602,14 @@ body {
   .row > * {
     padding-right: 8px !important;
     padding-left: 8px !important;
+  }
+
+  .footer-text {
+    font-size: 0.75rem;
+  }
+
+  .footer-section {
+    padding: 12px 0;
   }
 }
 
