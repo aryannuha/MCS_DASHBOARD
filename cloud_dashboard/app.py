@@ -35,10 +35,18 @@ from engineer_pages.windspeed_eng import engineer_windspeed_layout
 from engineer_pages.rainfall_eng import engineer_rainfall_layout  
 from engineer_pages.alarm_eng import engineer_alarm_layout  
 from engineer_pages.gps_eng import engineer_gps_layout  
+import os
+from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app
 server = Flask(__name__)
-server.secret_key = secrets.token_hex(32)  # Generates a 64-character hexadecimal key
+
+# UPDATED: Secure secret key from environment
+server.secret_key = os.getenv('SECRET_KEY', '9f9f9f9f9f9f9f9f9f9f9f9f9f9f9')  # Use a strong secret key
 
 # Menyimpan daftar halaman multipage
 pages = {
@@ -70,8 +78,12 @@ login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = 'login'  # Specify the login route
 
-# User data for simplicity (use a database in production)
-users = {'engineer': {'password': 'engineer'}}
+# UPDATED: Secure user data with hashed passwords
+users = {
+    'engineer': {
+        'password_hash': generate_password_hash(os.getenv('ENGINEER_PASSWORD', 'password'))
+    }
+}
 
 class User(UserMixin):
     def __init__(self, id):
@@ -87,17 +99,24 @@ def home():
     # Public home page, redirects to guest dashboard
     return redirect('/dash/')
 
+# UPDATED: Secure login route with password hashing
 @server.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username in users and users[username]['password'] == password:
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        # Input validation
+        if not username or not password:
+            flash('Username and password are required')
+            return redirect(url_for('login'))
+        
+        # Check if user exists and password is correct
+        if username in users and check_password_hash(users[username]['password_hash'], password):
             user = User(username)
             login_user(user)
             return redirect(url_for('dashboard'))
         
-        # Tambahkan flash & redirect untuk POST-REDIRECT-GET
         flash('Invalid credentials')
         return redirect(url_for('login'))
 
@@ -189,16 +208,28 @@ def generate_path_points(center_lat, center_lon, points=10, radius=0.005):
 # Generate a sample path
 PATH_POINTS = generate_path_points(-6.914744, 107.609810, points=20)
 
-# MQTT Configuration
-BROKER = "9a59e12602b646a292e7e66a5296e0ed.s1.eu.hivemq.cloud"
-PORT = 8883
-USERNAME = "testing"
-PASSWORD = "Testing123"
+# UPDATED: MQTT Configuration from environment variables
+BROKER = os.getenv('MQTT_BROKER', "broker")
+PORT = int(os.getenv('MQTT_PORT', 'port'))
+USERNAME = os.getenv('MQTT_USERNAME', "username")
+PASSWORD = os.getenv('MQTT_PASSWORD', "password")
+MQTT_VERIFY_CERTS = os.getenv('MQTT_VERIFY_CERTS', 'true').lower() == 'true'
 
-# Create SSL/TLS context
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
+# UPDATED: Secure SSL context creation
+def create_secure_ssl_context():
+    """Create SSL context with proper security"""
+    ssl_context = ssl.create_default_context()
+    
+    # Only disable verification if explicitly set to false (for development only)
+    if not MQTT_VERIFY_CERTS:
+        print("WARNING: MQTT certificate verification disabled - not recommended for production!")
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+    
+    return ssl_context
+
+# Create SSL context
+ssl_context = create_secure_ssl_context()
 
 # TOPIC FOR DATA
 TOPIC_SUHU = "mcs/kodeDataSuhuIn"
@@ -296,16 +327,43 @@ def on_message(client, userdata, msg):
     except Exception as e:
         print(f"Error processing MQTT message: {e}")
 
-# MQTT Client
-client = mqtt.Client()
-client.username_pw_set(USERNAME, PASSWORD)
-client.tls_set_context(ssl_context)
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect(BROKER, PORT, 60)
+# UPDATED: MQTT Client with error handling
+def setup_mqtt_client():
+    """Setup MQTT client with proper error handling"""
+    try:
+        client = mqtt.Client()
+        client.username_pw_set(USERNAME, PASSWORD)
+        client.tls_set_context(ssl_context)
+        client.on_connect = on_connect
+        client.on_message = on_message
+        
+        # Add connection error handling
+        def on_disconnect(client, userdata, rc):
+            if rc != 0:
+                print(f"Unexpected MQTT disconnection. Return code: {rc}")
+        
+        client.on_disconnect = on_disconnect
+        
+        # Connect with error handling
+        result = client.connect(BROKER, PORT, 60)
+        if result == 0:
+            print("MQTT client connected successfully")
+            return client
+        else:
+            print(f"Failed to connect to MQTT broker. Return code: {result}")
+            return None
+            
+    except Exception as e:
+        print(f"Error setting up MQTT client: {e}")
+        return None
 
-# Jalankan MQTT dalam thread
-threading.Thread(target=client.loop_forever, daemon=True).start()
+# Initialize MQTT client
+mqtt_client = setup_mqtt_client()
+if mqtt_client:
+    # Run MQTT in thread only if connection successful
+    threading.Thread(target=mqtt_client.loop_forever, daemon=True).start()
+else:
+    print("MQTT client not started due to connection issues")
 
 # main layout dash
 app_dash.layout = html.Div([
