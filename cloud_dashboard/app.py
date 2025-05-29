@@ -1612,4 +1612,4 @@ def update_alarm_values(n):
 
 # Run server
 if __name__ == '__main__':
-    server.run(debug=True)
+    server.run(server.run(host='0.0.0.0', port=5000))
