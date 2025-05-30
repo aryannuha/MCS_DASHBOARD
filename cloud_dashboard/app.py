@@ -14,7 +14,7 @@ import random
 import pandas as pd
 import numpy as np
 from scipy import interpolate
-from datetime import datetime
+from datetime import datetime, timedelta
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from pages.mcs_dashboard_all import main_dashboard_layout, main_dashboard_path
@@ -36,6 +36,7 @@ from engineer_pages.rainfall_eng import engineer_rainfall_layout
 from engineer_pages.alarm_eng import engineer_alarm_layout  
 from engineer_pages.gps_eng import engineer_gps_layout  
 import os
+import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
@@ -142,6 +143,47 @@ def restrict_dash_pages():
     if request.path.startswith('/dash/engineer') and not session.get('_user_id'):
         return redirect(url_for('login'))
 
+# NEW: Connection monitoring variables
+connection_status = {
+    'connected': False,
+    'last_message_time': None,
+    'connection_timeout': 60  # seconds - consider disconnected if no message for 60 seconds
+}
+
+# NEW: Default values for sensors
+DEFAULT_VALUES = {
+    'kodeDataSuhuIn': "-",
+    'kodeDataKelembabanIn': "-",
+    'kodeDataSuhuOut': "-",
+    'kodeDataKelembabanOut': "-",
+    'kodeDataCo2': "-",
+    'kodeDataWindspeed': "-",
+    'kodeDataRainfall': "-",
+    'kodeDataPar': "-",
+    'kodeDataLat': "-",
+    'kodeDataLon': "-"
+}
+
+# Default values for alarms
+DEFAULT_ALARM_VALUES = {
+    'kodeAlarmSuhuIn': 5,
+    'beritaSuhuIn': 'N/A',
+    'kodeAlarmKelembabanIn': 5,
+    'beritaKelembabanIn': 'N/A',
+    'kodeAlarmSuhuOut': 5,
+    'beritaSuhuOut': 'N/A',
+    'kodeAlarmKelembabanOut': 5,
+    'beritaKelembabanOut': 'N/A',
+    'kodeAlarmCo2': 5,
+    'beritaCo2': 'N/A',
+    'kodeAlarmWindspeed': 5,
+    'beritaWindspeed': 'N/A',
+    'kodeAlarmRainfall': 5,
+    'beritaRainfall': 'N/A',
+    'kodeAlarmPar': 5,
+    'beritaPar': 'N/A',
+}
+
 # data storage
 data = {
     'waktu': [],      # Time values
@@ -159,23 +201,52 @@ data = {
 
 # Alarm data storage
 alarm_data = {
-    'kodeAlarmSuhuIn': 0,
-    'beritaSuhuIn': 'Normal',
-    'kodeAlarmKelembabanIn': 0,
-    'beritaKelembabanIn': 'Normal',
-    'kodeAlarmSuhuOut': 0,
-    'beritaSuhuOut': 'Normal',
-    'kodeAlarmKelembabanOut': 0,
-    'beritaKelembabanOut': 'Normal',
-    'kodeAlarmCo2': 0,
-    'beritaCo2': 'Normal',
-    'kodeAlarmWindspeed': 0,
-    'beritaWindspeed': 'Normal',
-    'kodeAlarmRainfall': 0,
-    'beritaRainfall': 'Normal',
-    'kodeAlarmPar': 0,
-    'beritaPar': 'Normal',
+    'kodeAlarmSuhuIn': 5,
+    'beritaSuhuIn': 'N/A',
+    'kodeAlarmKelembabanIn': 5,
+    'beritaKelembabanIn': 'N/A',
+    'kodeAlarmSuhuOut': 5,
+    'beritaSuhuOut': 'N/A',
+    'kodeAlarmKelembabanOut': 5,
+    'beritaKelembabanOut': 'N/A',
+    'kodeAlarmCo2': 5,
+    'beritaCo2': 'N/A',
+    'kodeAlarmWindspeed': 5,
+    'beritaWindspeed': 'N/A',
+    'kodeAlarmRainfall': 5,
+    'beritaRainfall': 'N/A',
+    'kodeAlarmPar': 5,
+    'beritaPar': 'N/A',
 }
+
+# Helper function for safe numeric conversion
+def safe_float_convert(value, default_display="N/A"):
+    """
+    Safely convert a value to float with proper formatting.
+    Returns formatted string or default_display if conversion fails.
+    """
+    try:
+        # Handle None values
+        if value is None:
+            return default_display
+        
+        # Handle string values
+        if isinstance(value, str):
+            # Check if it's a default placeholder
+            if value == "-" or value.strip() == "":
+                return default_display
+            # Try to convert string to float
+            return f"{float(value):.1f}"
+        
+        # Handle numeric values (int, float)
+        if isinstance(value, (int, float)):
+            return f"{float(value):.1f}"
+        
+        # If it's any other type, return default
+        return default_display
+        
+    except (ValueError, TypeError):
+        return default_display
 
 # Define some locations in Bandung, Indonesia for demonstration
 LOCATIONS = [
@@ -263,6 +334,33 @@ TOPIC_BERITA_WINDSPEED = "mcs/beritaWindspeed"
 TOPIC_BERITA_RAINFALL = "mcs/beritaRainfall"
 TOPIC_BERITA_PAR = "mcs/beritaPar"
 
+# NEW: Function to check if data is stale
+def is_data_stale():
+    """Check if the last received data is older than the timeout period"""
+    if connection_status['last_message_time'] is None:
+        return True
+    
+    time_diff = datetime.now() - connection_status['last_message_time']
+    return time_diff.total_seconds() > connection_status['connection_timeout']
+
+# NEW: Function to reset data to defaults
+def reset_to_default_values():
+    """Reset all sensor data to default values"""
+    global data
+    global alarm_data
+    current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
+    
+    # Clear existing data and add default values
+    for key in DEFAULT_VALUES:
+        data[key] = [DEFAULT_VALUES[key]]
+
+    # Clear existing alarm_data and add default_alarm_values
+    for key2 in DEFAULT_ALARM_VALUES:
+        alarm_data[key2] = [DEFAULT_ALARM_VALUES[key2]]
+    
+    data['waktu'] = [current_time]
+    print("Data reset to default values due to connection timeout")
+
 # MQTT Callback
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -284,10 +382,27 @@ def on_connect(client, userdata, flags, rc):
     else:
         print(f"Failed to connect, return code {rc}")
 
+# NEW: Enhanced on_disconnect callback
+def on_disconnect(client, userdata, rc):
+    global connection_status
+    connection_status['connected'] = False
+    if rc != 0:
+        print(f"Unexpected MQTT disconnection. Return code: {rc}")
+        print("Attempting to reconnect...")
+        # Attempt to reconnect
+        try:
+            client.reconnect()
+        except Exception as e:
+            print(f"Reconnection failed: {e}")
+
 def on_message(client, userdata, msg):
-    global data, alarm_data
+    global data, alarm_data, connection_status
     try:
-        topic = msg.topic.split('/')[-1]  # Get the last part of the topic (e.g., 'suhu' from 'esp32/suhu')
+        # Update connection status
+        connection_status['last_message_time'] = datetime.now()
+        connection_status['connected'] = True
+        
+        topic = msg.topic.split('/')[-1]  # Get the last part of the topic
         
         # Process regular data topics
         if topic in ['kodeDataSuhuIn', 'kodeDataKelembabanIn', 'kodeDataSuhuOut', 'kodeDataKelembabanOut',
@@ -296,53 +411,50 @@ def on_message(client, userdata, msg):
             payload = float(msg.payload.decode())
             current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
             
-            if len(data[topic]) >= 20:  # Keep only last 20 points
+            # Keep only last 20 points for all data
+            if len(data[topic]) >= 20:
                 data[topic] = data[topic][1:]
             data[topic].append(payload)
             
-            # Keep waktu list in sync with the latest data addition
-            # This ensures all lists have the same length
-            if topic == 'kodeDataSuhuIn':  # Only update waktu when temperature data comes in
-                if len(data['waktu']) >= 20:
-                    data['waktu'] = data['waktu'][1:]
-                data['waktu'].append(current_time)
+            # FIXED: Update waktu for ANY sensor data, not just temperature
+            if len(data['waktu']) >= 20:
+                data['waktu'] = data['waktu'][1:]
+            data['waktu'].append(current_time)
+            
+            # Print for debugging
+            print(f"Updated {topic}: {payload} at {current_time}")
         
         # Process alarm code topics
         elif topic.startswith('kodeAlarm'):
-            # For example: 'kodeAlarmSuhuIn'
             try:
-                # Parse as integer for alarm codes
                 alarm_value = int(msg.payload.decode())
                 alarm_data[topic] = alarm_value
+                print(f"Updated alarm {topic}: {alarm_value}")
             except ValueError:
                 print(f"Error parsing alarm value for {topic}: {msg.payload.decode()}")
         
         # Process berita (alert message) topics
         elif topic.startswith('berita'):
-            # For example: 'beritaSuhuIn'
-            # Keep as string for berita messages
             berita_value = msg.payload.decode()
             alarm_data[topic] = berita_value
+            print(f"Updated berita {topic}: {berita_value}")
 
     except Exception as e:
         print(f"Error processing MQTT message: {e}")
 
-# UPDATED: MQTT Client with error handling
+# UPDATED: MQTT Client with enhanced reconnection logic
 def setup_mqtt_client():
-    """Setup MQTT client with proper error handling"""
+    """Setup MQTT client with proper error handling and reconnection"""
     try:
-        client = mqtt.Client()
+        client = mqtt.Client()  # Maintain session for better reconnection
         client.username_pw_set(USERNAME, PASSWORD)
         client.tls_set_context(ssl_context)
         client.on_connect = on_connect
         client.on_message = on_message
-        
-        # Add connection error handling
-        def on_disconnect(client, userdata, rc):
-            if rc != 0:
-                print(f"Unexpected MQTT disconnection. Return code: {rc}")
-        
         client.on_disconnect = on_disconnect
+        
+        # Set keepalive and other connection parameters
+        client.keepalive = 60
         
         # Connect with error handling
         result = client.connect(BROKER, PORT, 60)
@@ -356,14 +468,58 @@ def setup_mqtt_client():
     except Exception as e:
         print(f"Error setting up MQTT client: {e}")
         return None
+    
+# NEW: Background thread to monitor connection and reset data if needed
+def connection_monitor():
+    """Monitor connection status and reset data if no messages received"""
+    while True:
+        try:
+            if is_data_stale():
+                if connection_status['connected']:
+                    print("No recent data received, connection may be stale")
+                    connection_status['connected'] = False
+                reset_to_default_values()
+            time.sleep(30)  # Check every 30 seconds
+        except Exception as e:
+            print(f"Error in connection monitor: {e}")
+            time.sleep(30)
+
+# NEW: MQTT reconnection thread
+def mqtt_reconnection_handler(client):
+    """Handle MQTT reconnection in a separate thread"""
+    while True:
+        try:
+            if not connection_status['connected']:
+                print("Attempting MQTT reconnection...")
+                client.reconnect()
+                time.sleep(10)  # Wait before next attempt
+            else:
+                time.sleep(60)  # Check every minute when connected
+        except Exception as e:
+            print(f"Reconnection attempt failed: {e}")
+            time.sleep(10)
 
 # Initialize MQTT client
 mqtt_client = setup_mqtt_client()
 if mqtt_client:
     # Run MQTT in thread only if connection successful
-    threading.Thread(target=mqtt_client.loop_forever, daemon=True).start()
+    mqtt_thread = threading.Thread(target=mqtt_client.loop_forever, daemon=True)
+    mqtt_thread.start()
+    
+    # Start connection monitor thread
+    monitor_thread = threading.Thread(target=connection_monitor, daemon=True)
+    monitor_thread.start()
+    
+    # Start reconnection handler thread  
+    reconnect_thread = threading.Thread(target=mqtt_reconnection_handler, args=(mqtt_client,), daemon=True)
+    reconnect_thread.start()
+    
+    print("MQTT client and monitoring threads started")
 else:
     print("MQTT client not started due to connection issues")
+    # Start monitor thread even without MQTT to reset data
+    monitor_thread = threading.Thread(target=connection_monitor, daemon=True)
+    monitor_thread.start()
 
 # main layout dash
 app_dash.layout = html.Div([
@@ -419,14 +575,15 @@ def display_page(pathname):
 )
 def update_main_dashboard(n):
     try:
-        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else 0
-        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else 0
-        suhu_out = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else 0
-        kelembaban_out = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else 0
-        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else 0
-        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else 0
-        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else 0
-        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else 0
+        # Get latest values or default if no data
+        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else DEFAULT_VALUES['kodeDataSuhuIn']
+        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else DEFAULT_VALUES['kodeDataKelembabanIn']
+        suhu_out = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else DEFAULT_VALUES['kodeDataSuhuOut']
+        kelembaban_out = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else DEFAULT_VALUES['kodeDataKelembabanOut']
+        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else DEFAULT_VALUES['kodeDataCo2']
+        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else DEFAULT_VALUES['kodeDataWindspeed']
+        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else DEFAULT_VALUES['kodeDataRainfall']
+        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else DEFAULT_VALUES['kodeDataPar']
 
         return (
             f" {suhu}°C",
@@ -481,8 +638,8 @@ def update_th_in_dashboard(n):
             return suhu_value, kelembaban_value, empty_temp_fig, empty_humid_fig
         
         # Get the latest values
-        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else 0
-        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else 0
+        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else DEFAULT_VALUES['kodeDataSuhuIn']
+        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else DEFAULT_VALUES['kodeDataKelembabanIn']
         suhu_value = f"{suhu}°C"
         kelembaban_value = f"{kelembaban}%"
         
@@ -691,8 +848,8 @@ def update_th_out_dashboard(n):
             return suhu_value, kelembaban_value, empty_temp_fig, empty_humid_fig
         
         # Get the latest values
-        suhu = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else 0
-        kelembaban = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else 0
+        suhu = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else DEFAULT_VALUES['kodeDataSuhuOut']
+        kelembaban = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else DEFAULT_VALUES['kodeDataKelembabanOut']
         suhu_value = f"{suhu}°C"
         kelembaban_value = f"{kelembaban}%"
 
@@ -888,7 +1045,7 @@ def update_windspeed_dashboard(n):
             return windspeed_value, empty_windspeed_fig
         
         # Get the latest values
-        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else 0
+        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else DEFAULT_VALUES['kodeDataWindspeed']
         windspeed_value = f"{windspeed}m/s"
         
         # Create windspeed graph with properly aligned x and y values
@@ -1009,7 +1166,7 @@ def update_rainfall_dashboard(n):
             return rainfall_value, empty_rainfall_fig
         
         # Get the latest values
-        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else 0
+        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else DEFAULT_VALUES['kodeDataRainfall']
         rainfall_value = f"{rainfall}mm"
         
         # Create rainfall graph with properly aligned x and y values
@@ -1130,7 +1287,7 @@ def update_co2_dashboard(n):
             return co2_value, co2_fig
         
         # Get the latest values
-        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else 0
+        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else DEFAULT_VALUES['kodeDataCo2']
         co2_value = f"{co2}PPM"
         
 
@@ -1252,7 +1409,7 @@ def update_par_dashboard(n):
             return par_value, par_fig
         
         # Get the latest values
-        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else 0
+        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else DEFAULT_VALUES['kodeDataPar']
         par_value = f"{par}μmol/m²/s"
         
         # Create par graph with properly aligned x and y values
@@ -1346,31 +1503,6 @@ def update_par_dashboard(n):
         ))
         return "N/A", default_fig
 
-# Add this function to help debug what's happening with your data
-# and the table th_in
-# @app_dash.callback(
-#     Output('historical-table-th-in', 'data'),
-#     [Input('interval_thin', 'n_intervals')]
-# )
-# def update_historical_table(n):
-#     try:            
-#         # Create table data from the last 4 entries
-#         sample_size = min(2, len(data['waktu']))
-#         table_data = []
-        
-#         for i in range(sample_size):
-#             idx = -(i+1)  # Index from the end of the list
-#             table_data.append({
-#                 "time": data['waktu'][idx] if idx < len(data['waktu']) else "",
-#                 "temperature_in_historical": f"{data['kodeDataSuhuIn'][idx]:.1f}%" if idx < len(data['kodeDataSuhuIn']) else "",
-#                 "humidity_in_historical": f"{data['kodeDataKelembabanIn'][idx]:.1f}%" if idx < len(data['kodeDataKelembabanIn']) else ""
-#             })
-            
-#         return table_data
-#     except Exception as e:
-#         print(f"Error in update_historical_table: {e}")
-#         return [{}]
-
 # Callbacks to update the realtime table
 @app_dash.callback(
     Output('realtime-table', 'data'),
@@ -1391,14 +1523,30 @@ def update_realtime_table(n_intervals):
             try:
                 table_row = {
                     "Time": data['waktu'][i] if i < len(data['waktu']) else "N/A",
-                    "Temp In (°C)": f"{float(data['kodeDataSuhuIn'][i]):.1f}" if i < len(data['kodeDataSuhuIn']) else "N/A",
-                    "Humidity In (%)": f"{float(data['kodeDataKelembabanIn'][i]):.1f}" if i < len(data['kodeDataKelembabanIn']) else "N/A",
-                    "Temp Out (°C)": f"{float(data['kodeDataSuhuOut'][i]):.1f}" if i < len(data['kodeDataSuhuOut']) else "N/A",
-                    "Humidity Out (%)": f"{float(data['kodeDataKelembabanOut'][i]):.1f}" if i < len(data['kodeDataKelembabanOut']) else "N/A",
-                    "PAR (μmol/m²/s)": f"{float(data['kodeDataPar'][i]):.1f}" if i < len(data['kodeDataPar']) else "N/A",
-                    "CO2 (PPM)": f"{float(data['kodeDataCo2'][i]):.1f}" if i < len(data['kodeDataCo2']) else "N/A",
-                    "Windspeed (m/s)": f"{float(data['kodeDataWindspeed'][i]):.1f}" if i < len(data['kodeDataWindspeed']) else "N/A",
-                    "Rainfall (mm)": f"{float(data['kodeDataRainfall'][i]):.1f}" if i < len(data['kodeDataRainfall']) else "N/A"
+                    "Temp In (°C)": safe_float_convert(
+                        data['kodeDataSuhuIn'][i] if i < len(data['kodeDataSuhuIn']) else None
+                    ),
+                    "Humidity In (%)": safe_float_convert(
+                        data['kodeDataKelembabanIn'][i] if i < len(data['kodeDataKelembabanIn']) else None
+                    ),
+                    "Temp Out (°C)": safe_float_convert(
+                        data['kodeDataSuhuOut'][i] if i < len(data['kodeDataSuhuOut']) else None
+                    ),
+                    "Humidity Out (%)": safe_float_convert(
+                        data['kodeDataKelembabanOut'][i] if i < len(data['kodeDataKelembabanOut']) else None
+                    ),
+                    "PAR (μmol/m²/s)": safe_float_convert(
+                        data['kodeDataPar'][i] if i < len(data['kodeDataPar']) else None
+                    ),
+                    "CO2 (PPM)": safe_float_convert(
+                        data['kodeDataCo2'][i] if i < len(data['kodeDataCo2']) else None
+                    ),
+                    "Windspeed (m/s)": safe_float_convert(
+                        data['kodeDataWindspeed'][i] if i < len(data['kodeDataWindspeed']) else None
+                    ),
+                    "Rainfall (mm)": safe_float_convert(
+                        data['kodeDataRainfall'][i] if i < len(data['kodeDataRainfall']) else None
+                    )
                 }
                 table_data.append(table_row)
             except (IndexError, ValueError) as e:
@@ -1456,25 +1604,49 @@ def update_gps_data(n_intervals):
     # Create a local copy of locations including eFarming
     locations = LOCATIONS + [efarming_location]
     
+    # Safe GPS coordinate conversion
+    def safe_coordinate_convert(coord_value, fallback_value):
+        """Safely convert coordinate value to float"""
+        try:
+            if coord_value is None:
+                return fallback_value
+            if isinstance(coord_value, str):
+                if coord_value == "-" or coord_value.strip() == "":
+                    return fallback_value
+                return float(coord_value)
+            if isinstance(coord_value, (int, float)):
+                return float(coord_value)
+            return fallback_value
+        except (ValueError, TypeError):
+            return fallback_value
+    
     # Check if we have GPS data from MQTT
     if data["kodeDataLat"] and data["kodeDataLon"]:
-        # Use the latest GPS coordinates from the MQTT data
-        current_lat = data["kodeDataLat"][-1]
-        current_lon = data["kodeDataLon"][-1]
+        # Use the latest GPS coordinates from the MQTT data with safe conversion
+        raw_lat = data["kodeDataLat"][-1] if len(data["kodeDataLat"]) > 0 else None
+        raw_lon = data["kodeDataLon"][-1] if len(data["kodeDataLon"]) > 0 else None
         
-        # Find closest known location
-        min_distance = float('inf')
-        location_name = "Unknown Location"
-        for loc in locations:
-            dist = ((loc["lat"] - current_lat)**2 + (loc["lon"] - current_lon)**2)**0.5
-            if dist < min_distance:
-                min_distance = dist
-                location_name = f"Near {loc['name']}"
+        current_lat = safe_coordinate_convert(raw_lat, efarming_location["lat"])
+        current_lon = safe_coordinate_convert(raw_lon, efarming_location["lon"])
+        
+        # Only search for closest location if we have valid coordinates (not fallback)
+        if (raw_lat is not None and raw_lat != "-" and 
+            raw_lon is not None and raw_lon != "-"):
+            # Find closest known location
+            min_distance = float('inf')
+            location_name = "Unknown Location"
+            for loc in locations:
+                dist = ((loc["lat"] - current_lat)**2 + (loc["lon"] - current_lon)**2)**0.5
+                if dist < min_distance:
+                    min_distance = dist
+                    location_name = f"Near {loc['name']}"
+        else:
+            location_name = "eFarming Corpora Community (Default)"
     else:
         # Fallback if no MQTT data is available
         current_lat = efarming_location["lat"]
         current_lon = efarming_location["lon"]
-        location_name = "eFarming Corpora Community"
+        location_name = "eFarming Corpora Community (Default)"
     
     # Create the map figure
     fig = go.Figure()
@@ -1505,28 +1677,13 @@ def update_gps_data(n_intervals):
         name="Reference Points"
     ))
     
-    # Add path history (last few points)
-    # history_length = min(10, len(data["kodeDataLat"]))
-    # if history_length > 1:
-    #     # Get the last few GPS points from the MQTT data
-    #     path_lats = data["kodeDataLat"][-history_length:]
-    #     path_lons = data["kodeDataLon"][-history_length:]
-        
-    #     fig.add_trace(go.Scattermapbox(
-    #         lat=path_lats,
-    #         lon=path_lons,
-    #         mode='lines',
-    #         line=dict(width=2, color='orange'),
-    #         name="Device Path"
-    #     ))
-    
     # Configure the map layout
     fig.update_layout(
         mapbox=dict(
             style="open-street-map",
-            center=dict(lat=current_lat, lon=current_lon),  # Center on current coordinates
-            zoom=15,  # Default zoom level (slightly zoomed in)
-            uirevision=f"{current_lat}_{current_lon}"  # Preserve zoom level while centered on current point
+            center=dict(lat=current_lat, lon=current_lon),
+            zoom=15,
+            uirevision=f"{current_lat}_{current_lon}"
         ),
         margin=dict(l=0, r=0, t=0, b=0),
         height=500,
@@ -1580,8 +1737,10 @@ def update_alarm_values(n):
             return "status-circle status-red"
         elif kode_alarm in [2, 3]:
             return "status-circle status-yellow"
-        else:  # kode_alarm == 0
+        elif kode_alarm == 0:
             return "status-circle status-green"
+        else:  # kode_alarm == 0
+            return "status-circle status-black"
     
     return (
         alarm_data['kodeAlarmSuhuIn'],

@@ -180,7 +180,7 @@ alarm_layout = html.Div([
         
         # Button Section
         html.Div([
-            html.Button("SETTING", className="btn btn-secondary m-1"),
+            # html.Button("SETTING", className="btn btn-secondary m-1"),
             dcc.Link("MCS", href="/dash/", className="btn btn-secondary m-1"),
             dcc.Link("T&H INDOOR", href="/dash/th-in", className="btn btn-secondary m-1"),
             dcc.Link("PAR", href="/dash/par", className="btn btn-secondary m-1"),
