@@ -4,6 +4,11 @@ import dash_bootstrap_components as dbc
 engineer_co2_layout = html.Div([
     # NAVBAR
     html.Div([
+        html.Div(html.Img(src="/static/img/lpdp.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/diktisaintekdan.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/ipb.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polsub.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polindra.png", className="navbar-logo")),
         html.Div("CO2 DASHBOARD", className="navbar-title"),
         dcc.Link(html.Img(src="/static/icon/gps.svg", className="gps-icon me-2"), href="/dash/engineer/gps"),
         dcc.Link(html.Img(src="/static/icon/notification.svg", className="notification-icon"), href="/dash/engineer/alarm"),
