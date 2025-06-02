@@ -136,7 +136,7 @@ def logout():
 # end of flask route
 
 # Integrate Dash app
-app_dash = dash.Dash(__name__, server=server, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP], title='MCS Dashboard', suppress_callback_exceptions=True, assets_folder='assets')
+app_dash = dash.Dash(__name__, server=server, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP], title='MCS Dashboard', suppress_callback_exceptions=True, assets_folder='assets', update_title=False)
  
 @app_dash.server.before_request
 def restrict_dash_pages():
