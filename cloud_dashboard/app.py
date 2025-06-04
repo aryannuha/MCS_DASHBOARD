@@ -184,6 +184,51 @@ DEFAULT_ALARM_VALUES = {
     'beritaPar': 'N/A',
 }
 
+# Default values for predicitons
+DEFAULT_PREDICTION_VALUES = {
+    'kodeDataSuhuPredict1': "-",
+    'kodeDataSuhuPredict2': "-",
+    'kodeDataSuhuPredict3': "-",
+    'kodeDataSuhuPredict4': "-",
+    'kodeDataSuhuPredict5': "-",
+    'kodeDataHumidityPredict1': "-",
+    'kodeDataHumidityPredict2': "-",
+    'kodeDataHumidityPredict3': "-",
+    'kodeDataHumidityPredict4': "-",
+    'kodeDataHumidityPredict5': "-",
+    'kodeDataSuhuOutPredict1': "-",
+    'kodeDataSuhuOutPredict2': "-",
+    'kodeDataSuhuOutPredict3': "-",
+    'kodeDataSuhuOutPredict4': "-",
+    'kodeDataSuhuOutPredict5': "-",
+    'kodeDataHumidityOutPredict1': "-",
+    'kodeDataHumidityOutPredict2': "-",
+    'kodeDataHumidityOutPredict3': "-",
+    'kodeDataHumidityOutPredict4': "-",
+    'kodeDataHumidityOutPredict5': "-",
+    'kodeDataCo2Predict1': "-",
+    'kodeDataCo2Predict2': "-",
+    'kodeDataCo2Predict3': "-",
+    'kodeDataCo2Predict4': "-",
+    'kodeDataCo2Predict5': "-",
+    'kodeDataParPredict1': "-",
+    'kodeDataParPredict2': "-",
+    'kodeDataParPredict3': "-",
+    'kodeDataParPredict4': "-",
+    'kodeDataParPredict5': "-",
+    'kodeDataWindspeedPredict1': "-",
+    'kodeDataWindspeedPredict2': "-",
+    'kodeDataWindspeedPredict3': "-",
+    'kodeDataWindspeedPredict4': "-",
+    'kodeDataWindspeedPredict5': "-",
+    'kodeDataRainfallPredict1': "-",
+    'kodeDataRainfallPredict2': "-",
+    'kodeDataRainfallPredict3': "-",
+    'kodeDataRainfallPredict4': "-",
+    'kodeDataRainfallPredict5': "-",
+}
+
+
 # data storage
 data = {
     'waktu': [],      # Time values
@@ -217,6 +262,50 @@ alarm_data = {
     'beritaRainfall': 'N/A',
     'kodeAlarmPar': 5,
     'beritaPar': 'N/A',
+}
+
+# Prediction data storage
+prediction_data = {
+    'kodeDataSuhuPredict1': [],
+    'kodeDataSuhuPredict2': [],
+    'kodeDataSuhuPredict3': [],
+    'kodeDataSuhuPredict4': [],
+    'kodeDataSuhuPredict5': [],
+    'kodeDataHumidityPredict1': [],
+    'kodeDataHumidityPredict2': [],
+    'kodeDataHumidityPredict3': [],
+    'kodeDataHumidityPredict4': [],
+    'kodeDataHumidityPredict5': [],
+    'kodeDataSuhuOutPredict1': [],
+    'kodeDataSuhuOutPredict2': [],
+    'kodeDataSuhuOutPredict3': [],
+    'kodeDataSuhuOutPredict4': [],
+    'kodeDataSuhuOutPredict5': [],
+    'kodeDataHumidityOutPredict1': [],
+    'kodeDataHumidityOutPredict2': [],
+    'kodeDataHumidityOutPredict3': [],
+    'kodeDataHumidityOutPredict4': [],
+    'kodeDataHumidityOutPredict5': [],
+    'kodeDataCo2Predict1': [],
+    'kodeDataCo2Predict2': [],
+    'kodeDataCo2Predict3': [],
+    'kodeDataCo2Predict4': [],
+    'kodeDataCo2Predict5': [],
+    'kodeDataParPredict1': [],
+    'kodeDataParPredict2': [],
+    'kodeDataParPredict3': [],
+    'kodeDataParPredict4': [],
+    'kodeDataParPredict5': [],
+    'kodeDataWindspeedPredict1': [],
+    'kodeDataWindspeedPredict2': [],
+    'kodeDataWindspeedPredict3': [],
+    'kodeDataWindspeedPredict4': [],
+    'kodeDataWindspeedPredict5': [],
+    'kodeDataRainfallPredict1': [],
+    'kodeDataRainfallPredict2': [],
+    'kodeDataRainfallPredict3': [],
+    'kodeDataRainfallPredict4': [],
+    'kodeDataRainfallPredict5': [],
 }
 
 # Helper function for safe numeric conversion
@@ -334,6 +423,48 @@ TOPIC_BERITA_WINDSPEED = "mcs/beritaWindspeed"
 TOPIC_BERITA_RAINFALL = "mcs/beritaRainfall"
 TOPIC_BERITA_PAR = "mcs/beritaPar"
 
+# TOPIC FOR PREDICTION
+TOPIC_SUHU_PREDICT1 = "mcs/kodeDataSuhuPredict1"
+TOPIC_SUHU_PREDICT2 = "mcs/kodeDataSuhuPredict2"
+TOPIC_SUHU_PREDICT3 = "mcs/kodeDataSuhuPredict3"
+TOPIC_SUHU_PREDICT4 = "mcs/kodeDataSuhuPredict4"
+TOPIC_SUHU_PREDICT5 = "mcs/kodeDataSuhuPredict5"
+TOPIC_HUMIDITY_PREDICT1 = "mcs/kodeDataHumidityPredict1"
+TOPIC_HUMIDITY_PREDICT2 = "mcs/kodeDataHumidityPredict2"
+TOPIC_HUMIDITY_PREDICT3 = "mcs/kodeDataHumidityPredict3"
+TOPIC_HUMIDITY_PREDICT4 = "mcs/kodeDataHumidityPredict4"
+TOPIC_HUMIDITY_PREDICT5 = "mcs/kodeDataHumidityPredict5"
+TOPIC_SUHUOUT_PREDICT1 = "mcs/kodeDataSuhuOutPredict1"
+TOPIC_SUHUOUT_PREDICT2 = "mcs/kodeDataSuhuOutPredict2"
+TOPIC_SUHUOUT_PREDICT3 = "mcs/kodeDataSuhuOutPredict3"
+TOPIC_SUHUOUT_PREDICT4 = "mcs/kodeDataSuhuOutPredict4"
+TOPIC_SUHUOUT_PREDICT5 = "mcs/kodeDataSuhuOutPredict5"
+TOPIC_HUMIDITYOUT_PREDICT1 = "mcs/kodeDataHumidityOutPredict1"
+TOPIC_HUMIDITYOUT_PREDICT2 = "mcs/kodeDataHumidityOutPredict2"
+TOPIC_HUMIDITYOUT_PREDICT3 = "mcs/kodeDataHumidityOutPredict3"
+TOPIC_HUMIDITYOUT_PREDICT4 = "mcs/kodeDataHumidityOutPredict4"
+TOPIC_HUMIDITYOUT_PREDICT5 = "mcs/kodeDataHumidityOutPredict5"
+TOPIC_CO2_PREDICT1 = "mcs/kodeDataCo2Predict1"
+TOPIC_CO2_PREDICT2 = "mcs/kodeDataCo2Predict2"
+TOPIC_CO2_PREDICT3 = "mcs/kodeDataCo2Predict3"
+TOPIC_CO2_PREDICT4 = "mcs/kodeDataCo2Predict4"
+TOPIC_CO2_PREDICT5 = "mcs/kodeDataCo2Predict5"
+TOPIC_PAR_PREDICT1 = "mcs/kodeDataParPredict1"
+TOPIC_PAR_PREDICT2 = "mcs/kodeDataParPredict2"
+TOPIC_PAR_PREDICT3 = "mcs/kodeDataParPredict3"
+TOPIC_PAR_PREDICT4 = "mcs/kodeDataParPredict4"
+TOPIC_PAR_PREDICT5 = "mcs/kodeDataParPredict5"
+TOPIC_WINDSPEED_PREDICT1 = "mcs/kodeDataWindspeedPredict1"
+TOPIC_WINDSPEED_PREDICT2 = "mcs/kodeDataWindspeedPredict2"
+TOPIC_WINDSPEED_PREDICT3 = "mcs/kodeDataWindspeedPredict3"
+TOPIC_WINDSPEED_PREDICT4 = "mcs/kodeDataWindspeedPredict4"
+TOPIC_WINDSPEED_PREDICT5 = "mcs/kodeDataWindspeedPredict5"
+TOPIC_RAINFALL_PREDICT1 = "mcs/kodeDataRainfallPredict1"
+TOPIC_RAINFALL_PREDICT2 = "mcs/kodeDataRainfallPredict2"
+TOPIC_RAINFALL_PREDICT3 = "mcs/kodeDataRainfallPredict3"
+TOPIC_RAINFALL_PREDICT4 = "mcs/kodeDataRainfallPredict4"
+TOPIC_RAINFALL_PREDICT5 = "mcs/kodeDataRainfallPredict5"
+
 # NEW: Function to check if data is stale
 def is_data_stale():
     """Check if the last received data is older than the timeout period"""
@@ -348,6 +479,7 @@ def reset_to_default_values():
     """Reset all sensor data to default values"""
     global data
     global alarm_data
+    global prediction_data
     current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
     
     # Clear existing data and add default values
@@ -357,6 +489,10 @@ def reset_to_default_values():
     # Clear existing alarm_data and add default_alarm_values
     for key2 in DEFAULT_ALARM_VALUES:
         alarm_data[key2] = [DEFAULT_ALARM_VALUES[key2]]
+
+    # Clear existing prediction_data and add default_prediction_values
+    for key3 in DEFAULT_PREDICTION_VALUES:
+        prediction_data[key3] = [DEFAULT_PREDICTION_VALUES[key3]] 
     
     data['waktu'] = [current_time]
     print("Data reset to default values due to connection timeout")
@@ -377,7 +513,27 @@ def on_connect(client, userdata, flags, rc):
                           (TOPIC_BERITA_SUHU_IN, 0), (TOPIC_BERITA_KELEMBABAN_IN, 0),
                           (TOPIC_BERITA_SUHU_OUT, 0), (TOPIC_BERITA_KELEMBABAN_OUT, 0),
                           (TOPIC_BERITA_CO2, 0), (TOPIC_BERITA_WINDSPEED, 0),
-                          (TOPIC_BERITA_RAINFALL, 0), (TOPIC_BERITA_PAR, 0)
+                          (TOPIC_BERITA_RAINFALL, 0), (TOPIC_BERITA_PAR, 0),
+                          (TOPIC_SUHU_PREDICT1, 0), (TOPIC_SUHU_PREDICT2, 0),
+                          (TOPIC_SUHU_PREDICT3, 0), (TOPIC_SUHU_PREDICT4, 0),
+                          (TOPIC_SUHU_PREDICT5, 0), (TOPIC_HUMIDITY_PREDICT1, 0),
+                          (TOPIC_HUMIDITY_PREDICT2, 0), (TOPIC_HUMIDITY_PREDICT3, 0),
+                          (TOPIC_HUMIDITY_PREDICT4, 0), (TOPIC_HUMIDITY_PREDICT5, 0),
+                          (TOPIC_SUHUOUT_PREDICT1, 0), (TOPIC_SUHUOUT_PREDICT2, 0),
+                          (TOPIC_SUHUOUT_PREDICT3, 0), (TOPIC_SUHUOUT_PREDICT4, 0),
+                          (TOPIC_SUHUOUT_PREDICT5, 0), (TOPIC_HUMIDITYOUT_PREDICT1, 0),
+                          (TOPIC_HUMIDITYOUT_PREDICT2, 0), (TOPIC_HUMIDITYOUT_PREDICT3, 0),
+                          (TOPIC_HUMIDITYOUT_PREDICT4, 0), (TOPIC_HUMIDITYOUT_PREDICT5, 0),
+                          (TOPIC_CO2_PREDICT1, 0), (TOPIC_CO2_PREDICT2, 0),
+                          (TOPIC_CO2_PREDICT3, 0), (TOPIC_CO2_PREDICT4, 0),
+                          (TOPIC_CO2_PREDICT5, 0), (TOPIC_PAR_PREDICT1, 0),
+                          (TOPIC_PAR_PREDICT2, 0), (TOPIC_PAR_PREDICT3, 0),
+                          (TOPIC_PAR_PREDICT4, 0), (TOPIC_PAR_PREDICT5, 0),
+                          (TOPIC_WINDSPEED_PREDICT1, 0), (TOPIC_WINDSPEED_PREDICT2, 0),
+                          (TOPIC_WINDSPEED_PREDICT3, 0), (TOPIC_WINDSPEED_PREDICT4, 0),
+                          (TOPIC_WINDSPEED_PREDICT5, 0), (TOPIC_RAINFALL_PREDICT1, 0),
+                          (TOPIC_RAINFALL_PREDICT2, 0), (TOPIC_RAINFALL_PREDICT3, 0),
+                          (TOPIC_RAINFALL_PREDICT4, 0), (TOPIC_RAINFALL_PREDICT5, 0)                                                           
                           ])  # Subscribe ke topik suhu & kelembaban
     else:
         print(f"Failed to connect, return code {rc}")
@@ -396,7 +552,7 @@ def on_disconnect(client, userdata, rc):
             print(f"Reconnection failed: {e}")
 
 def on_message(client, userdata, msg):
-    global data, alarm_data, connection_status
+    global data, alarm_data, connection_status, prediction_data
     try:
         # Update connection status
         connection_status['last_message_time'] = datetime.now()
@@ -416,7 +572,7 @@ def on_message(client, userdata, msg):
                 data[topic] = data[topic][1:]
             data[topic].append(payload)
             
-            # FIXED: Update waktu for ANY sensor data, not just temperature
+            # FIXED: Update waktu
             if topic == 'kodeDataSuhuIn':
                 if len(data['waktu']) >= 20:
                     data['waktu'] = data['waktu'][1:]
@@ -439,6 +595,15 @@ def on_message(client, userdata, msg):
             berita_value = msg.payload.decode()
             alarm_data[topic] = berita_value
             print(f"Updated berita {topic}: {berita_value}")
+
+        # Process prediction data topics
+        elif topic.startswith('kodeDataSuhuPredict') or topic.startswith('kodeDataHumidityPredict') or topic.startswith('kodeDataSuhuOutPredict') or topic.startswith('kodeDataHumidityOutPredict') or topic.startswith('kodeDataCo2Predict') or topic.startswith('kodeDataParPredict') or topic.startswith('kodeDataWindspeedPredict') or topic.startswith('kodeDataRainfallPredict'):
+            try:
+                predict_value = float(msg.payload.decode())
+                prediction_data[topic].append(predict_value)
+                print(f"Updated prediction {topic}: {predict_value}")
+            except ValueError:
+                print(f"Error parsing prediction value for {topic}: {msg.payload.decode()}")
 
     except Exception as e:
         print(f"Error processing MQTT message: {e}")
@@ -650,7 +815,7 @@ def update_th_in_dashboard(n):
         try:
             # Ensure we have data to work with
             if len(data['waktu']) > 3 and len(data['kodeDataSuhuIn']) > 3:
-                # We'll use only 3 data points for simplicity
+                # We'll use only 4 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
@@ -1769,6 +1934,868 @@ def update_alarm_values(n):
         alarm_data['beritaRainfall'],
         get_circle_class(alarm_data['kodeAlarmRainfall'])
     )
+
+# Callback for prediction graphs temperature and humidity indoor
+@app_dash.callback(
+    [Output('temp-prediction-graph', 'figure'),
+     Output('humidity-prediction-graph', 'figure')],
+    [Input('interval_thin', 'n_intervals')]
+)
+def update_prediction_graphs(n):
+    # Temperature prediction graph
+    temp_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        temp_predictions = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataSuhuPredict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                temp_predictions.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                temp_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Temp predictions: {temp_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, temp_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            temp_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            temp_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            temp_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    temp_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="°C",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    # Humidity prediction graph
+    humidity_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        humidity_predictions = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataHumidityPredict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                humidity_predictions.append(prediction_data[pred_key][-1])
+            else:
+                humidity_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Humidity future times: {future_times}")
+        print(f"Humidity predictions: {humidity_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, humidity_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            humidity_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            humidity_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            humidity_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    humidity_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="%",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return temp_fig, humidity_fig
+
+# Callback for prediction graphs temperature and humidity outdoor
+@app_dash.callback(
+    [Output('temp-prediction-out-graph', 'figure'),
+     Output('humidity-prediction-out-graph', 'figure')],
+    [Input('interval_thout', 'n_intervals')]
+)
+def update_prediction_graphs(n):
+    # Temperature prediction graph
+    temp_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        temp_predictions = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataSuhuOutPredict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                temp_predictions.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                temp_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Temp predictions: {temp_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, temp_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            temp_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            temp_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            temp_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    temp_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="°C",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    # Humidity prediction graph
+    humidity_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        humidity_predictions = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataHumidityOutPredict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                humidity_predictions.append(prediction_data[pred_key][-1])
+            else:
+                humidity_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Humidity future times: {future_times}")
+        print(f"Humidity predictions: {humidity_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, humidity_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            humidity_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            humidity_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            humidity_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    humidity_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="%",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return temp_fig, humidity_fig
+
+# Callback for prediction graphs co2
+@app_dash.callback(
+    Output('co2-prediction-graph', 'figure'),
+    [Input('interval_co2', 'n_intervals')]
+)
+def update_prediction_graphs(n):
+    # Temperature prediction graph
+    co2_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        co2_prediction = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataCo2Predict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                co2_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                co2_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"CO2 predictions: {co2_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, co2_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            co2_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='CO2 Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            co2_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            co2_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='CO2 Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    co2_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="PPM",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return co2_fig
+
+# Callback for prediction graphs par
+@app_dash.callback(
+    Output('par-prediction-graph', 'figure'),
+    [Input('interval_par', 'n_intervals')]
+)
+def update_prediction_graphs(n):
+    # Temperature prediction graph
+    par_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        par_prediction = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataParPredict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                par_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                par_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"PAR predictions: {par_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, par_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            par_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='PAR Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            par_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            par_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='PAR Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    par_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="μmol/m²/s",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return par_fig
+
+# Callback for prediction graphs windspeed
+@app_dash.callback(
+    Output('windspeed-prediction-graph', 'figure'),
+    [Input('interval_windspeed', 'n_intervals')]
+)
+def update_prediction_graphs(n):
+    # Temperature prediction graph
+    windspeed_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        windspeed_prediction = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataWindspeedPredict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                windspeed_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                windspeed_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Windspeed predictions: {windspeed_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, windspeed_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            windspeed_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Windspeed Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            windspeed_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            windspeed_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Windspeed Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    windspeed_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="m/s",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return windspeed_fig
+
+# Callback for prediction graphs rainfall
+@app_dash.callback(
+    Output('rainfall-prediction-graph', 'figure'),
+    [Input('interval_rainfall', 'n_intervals')]
+)
+def update_prediction_graphs(n):
+    # Temperature prediction graph
+    rainfall_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        rainfall_prediction = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        for i in range(1, 6):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            pred_key = f'kodeDataRainfallPredict{i}'
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                rainfall_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                rainfall_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Rainfall predictions: {rainfall_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, rainfall_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            rainfall_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Rainfall Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            rainfall_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            rainfall_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Rainfall Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    rainfall_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="mm",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return rainfall_fig
 
 # Run server
 if __name__ == '__main__':

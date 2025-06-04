@@ -32,11 +32,20 @@ engineer_windspeed_layout = html.Div([
                     width=12),
                 ], className="mb-3"),
                 
-                # Greenhouse Image
+                # WINDSPEED Prediction Graph Section
                 html.Div([
-                    html.Img(src="/static/img/gh.jpg", className="img-fluid w-100 border border-primary p-1", 
-                            style={"height": "300px", "object-fit": "cover"})
-                ], className="greenhouse-container")
+                    html.H5("WINDSPEED PREDICTION (1-5 Minutes)", className="text-center mb-3"),
+                    
+                    # WINDSPEED Prediction Graph
+                    html.Div([
+                        html.H6("WINDSPEED Prediction", className="text-center mb-2"),
+                        dcc.Graph(
+                            id='windspeed-prediction-graph',
+                            config={"displayModeBar": False},
+                            style={'height': '258px'}
+                        )
+                    ], className="mb-3 p-2 border rounded bg-light"),
+                ], className="prediction-container")
             ], width=6, className="pe-3"),
             
            # RIGHT SIDE - Graphs and Table

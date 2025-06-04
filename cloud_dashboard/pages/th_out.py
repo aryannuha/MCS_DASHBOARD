@@ -41,11 +41,30 @@ th_out_layout = html.Div([
                     width=6),
                 ], className="mb-3"),
                 
-                # Greenhouse Image
+                # Prediction Graphs Section
                 html.Div([
-                    html.Img(src="/static/img/gh.jpg", className="img-fluid w-100 border border-primary p-1", 
-                            style={"height": "300px", "object-fit": "cover"})
-                ], className="greenhouse-container")
+                    html.H5("PREDICTION GRAPHS (1-5 Minutes)", className="text-center mb-3"),
+                    
+                    # Temperature Prediction Graph
+                    html.Div([
+                        html.H6("Temperature Prediction", className="text-center mb-2"),
+                        dcc.Graph(
+                            id='temp-prediction-out-graph',
+                            config={"displayModeBar": False},
+                            style={'height': '97px'}
+                        )
+                    ], className="mb-3 p-2 border rounded bg-light"),
+                    
+                    # Humidity Prediction Graph
+                    html.Div([
+                        html.H6("Humidity Prediction", className="text-center mb-2"),
+                        dcc.Graph(
+                            id='humidity-prediction-out-graph',
+                            config={"displayModeBar": False},
+                            style={'height': '97px'}
+                        )
+                    ], className="mb-3 p-2 border rounded bg-light"),
+                ], className="prediction-container")
             ], width=6, className="pe-3"),
             
            # RIGHT SIDE - Graphs and Table
