@@ -417,9 +417,10 @@ def on_message(client, userdata, msg):
             data[topic].append(payload)
             
             # FIXED: Update waktu for ANY sensor data, not just temperature
-            if len(data['waktu']) >= 20:
-                data['waktu'] = data['waktu'][1:]
-            data['waktu'].append(current_time)
+            if topic == 'kodeDataSuhuIn':
+                if len(data['waktu']) >= 20:
+                    data['waktu'] = data['waktu'][1:]
+                data['waktu'].append(current_time)
             
             # Print for debugging
             print(f"Updated {topic}: {payload} at {current_time}")
