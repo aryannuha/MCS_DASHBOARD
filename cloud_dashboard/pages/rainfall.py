@@ -9,6 +9,7 @@ rainfall_layout = html.Div([
         html.Div(html.Img(src="/static/img/ipb.png", className="navbar-logo")),
         html.Div(html.Img(src="/static/img/polsub.png", className="navbar-logo")),
         html.Div(html.Img(src="/static/img/polindra.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polban.png", className="navbar-logo")),
         html.Div("RAINFALL DASHBOARD", className="navbar-title"),
         dcc.Link(html.Img(src="/static/icon/gps.svg", className="gps-icon me-2"), href="/dash/gps"),
         dcc.Link(html.Img(src="/static/icon/notification.svg", className="notification-icon"), href="/dash/alarm"),

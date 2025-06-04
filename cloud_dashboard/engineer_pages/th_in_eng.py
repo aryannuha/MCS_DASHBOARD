@@ -10,6 +10,7 @@ engineer_th_in_layout = html.Div([
         html.Div(html.Img(src="/static/img/ipb.png", className="navbar-logo")),
         html.Div(html.Img(src="/static/img/polsub.png", className="navbar-logo")),
         html.Div(html.Img(src="/static/img/polindra.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polban.png", className="navbar-logo")),
         html.Div("T&H INDOOR DASHBOARD", className="navbar-title"),
         dcc.Link(html.Img(src="/static/icon/gps.svg", className="gps-icon me-2"), href="/dash/engineer/gps"),
         dcc.Link(html.Img(src="/static/icon/notification.svg", className="notification-icon"), href="/dash/engineer/alarm"),
