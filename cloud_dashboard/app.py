@@ -147,165 +147,179 @@ def restrict_dash_pages():
 connection_status = {
     'connected': False,
     'last_message_time': None,
-    'connection_timeout': 60  # seconds - consider disconnected if no message for 60 seconds
+    'connection_timeout': 80  # seconds - consider disconnected if no message for 60 seconds
 }
 
 # NEW: Default values for sensors
 DEFAULT_VALUES = {
-    'kodeDataSuhuIn': "-",
-    'kodeDataKelembabanIn': "-",
-    'kodeDataSuhuOut': "-",
-    'kodeDataKelembabanOut': "-",
-    'kodeDataCo2': "-",
-    'kodeDataWindspeed': "-",
-    'kodeDataRainfall': "-",
-    'kodeDataPar': "-",
-    'kodeDataLat': "-",
-    'kodeDataLon': "-"
+    'kodeData0000': "-",  # Cycle start signal
+    'kodeData0211': "-",
+    'kodeData0212': "-",
+    'kodeData0711': "-",
+    'kodeData0712': "-",
+    'kodeData0311': "-",
+    'kodeData0411': "-",
+    'kodeData0511': "-",
+    'kodeData0611': "-",
+    'kodeData1011': "-",
+    'kodeData1012': "-"
 }
 
 # Default values for alarms
 DEFAULT_ALARM_VALUES = {
-    'kodeAlarmSuhuIn': 5,
-    'beritaSuhuIn': 'N/A',
-    'kodeAlarmKelembabanIn': 5,
-    'beritaKelembabanIn': 'N/A',
-    'kodeAlarmSuhuOut': 5,
-    'beritaSuhuOut': 'N/A',
-    'kodeAlarmKelembabanOut': 5,
-    'beritaKelembabanOut': 'N/A',
-    'kodeAlarmCo2': 5,
-    'beritaCo2': 'N/A',
-    'kodeAlarmWindspeed': 5,
-    'beritaWindspeed': 'N/A',
-    'kodeAlarmRainfall': 5,
-    'beritaRainfall': 'N/A',
-    'kodeAlarmPar': 5,
-    'beritaPar': 'N/A',
+    'kodeAlarm0211': 5,
+    'kodeAlarm0212': 5,
+    'kodeAlarm0711': 5,
+    'kodeAlarm0712': 5,
+    'kodeAlarm0311': 5,
+    'kodeAlarm0411': 5,
+    'kodeAlarm0511': 5,
+    'kodeAlarm0611': 5,
+    'kodeAlarm0911': 5,
+    'kodeAlarm0912': 5,
+    'kodeAlarm0913': 5,
+    'berita0211': 'N/A',
+    'berita0212': 'N/A',
+    'berita0711': 'N/A',
+    'berita0712': 'N/A',
+    'berita0311': 'N/A',
+    'berita0411': 'N/A',
+    'berita0511': 'N/A',
+    'berita0611': 'N/A',
+    'berita0911': 'N/A',
+    'berita0912': 'N/A',
+    'berita0913': 'N/A',
 }
 
 # Default values for predicitons
 DEFAULT_PREDICTION_VALUES = {
-    'kodeDataSuhuPredict1': "-",
-    'kodeDataSuhuPredict2': "-",
-    'kodeDataSuhuPredict3': "-",
-    'kodeDataSuhuPredict4': "-",
-    'kodeDataSuhuPredict5': "-",
-    'kodeDataHumidityPredict1': "-",
-    'kodeDataHumidityPredict2': "-",
-    'kodeDataHumidityPredict3': "-",
-    'kodeDataHumidityPredict4': "-",
-    'kodeDataHumidityPredict5': "-",
-    'kodeDataSuhuOutPredict1': "-",
-    'kodeDataSuhuOutPredict2': "-",
-    'kodeDataSuhuOutPredict3': "-",
-    'kodeDataSuhuOutPredict4': "-",
-    'kodeDataSuhuOutPredict5': "-",
-    'kodeDataHumidityOutPredict1': "-",
-    'kodeDataHumidityOutPredict2': "-",
-    'kodeDataHumidityOutPredict3': "-",
-    'kodeDataHumidityOutPredict4': "-",
-    'kodeDataHumidityOutPredict5': "-",
-    'kodeDataCo2Predict1': "-",
-    'kodeDataCo2Predict2': "-",
-    'kodeDataCo2Predict3': "-",
-    'kodeDataCo2Predict4': "-",
-    'kodeDataCo2Predict5': "-",
-    'kodeDataParPredict1': "-",
-    'kodeDataParPredict2': "-",
-    'kodeDataParPredict3': "-",
-    'kodeDataParPredict4': "-",
-    'kodeDataParPredict5': "-",
-    'kodeDataWindspeedPredict1': "-",
-    'kodeDataWindspeedPredict2': "-",
-    'kodeDataWindspeedPredict3': "-",
-    'kodeDataWindspeedPredict4': "-",
-    'kodeDataWindspeedPredict5': "-",
-    'kodeDataRainfallPredict1': "-",
-    'kodeDataRainfallPredict2': "-",
-    'kodeDataRainfallPredict3': "-",
-    'kodeDataRainfallPredict4': "-",
-    'kodeDataRainfallPredict5': "-",
+    'kodeData0213': "-",
+    'kodeData0214': "-",
+    'kodeData0215': "-",
+    'kodeData0216': "-",
+    'kodeData0217': "-",
+    'kodeData0218': "-",
+    'kodeData0219': "-",
+    'kodeData0220': "-",
+    'kodeData0221': "-",
+    'kodeData0222': "-",
+    'kodeData0713': "-",
+    'kodeData0714': "-",
+    'kodeData0715': "-",
+    'kodeData0716': "-",
+    'kodeData0717': "-",
+    'kodeData0718': "-",
+    'kodeData0719': "-",
+    'kodeData0720': "-",
+    'kodeData0721': "-",
+    'kodeData0722': "-",
+    'kodeData0312': "-",
+    'kodeData0313': "-",
+    'kodeData0314': "-",
+    'kodeData0315': "-",
+    'kodeData0316': "-",
+    'kodeData0412': "-",
+    'kodeData0413': "-",
+    'kodeData0414': "-",
+    'kodeData0415': "-",
+    'kodeData0416': "-",
+    'kodeData0512': "-",
+    'kodeData0513': "-",
+    'kodeData0514': "-",
+    'kodeData0515': "-",
+    'kodeData0516': "-",
+    'kodeData0612': "-",
+    'kodeData0613': "-",
+    'kodeData0614': "-",
+    'kodeData0615': "-",
+    'kodeData0616': "-",
 }
 
 
 # data storage
 data = {
     'waktu': [],      # Time values
-    'kodeDataSuhuIn': [],       # Temperature values 
-    'kodeDataKelembabanIn': [], # Humidity values
-    'kodeDataSuhuOut': [],   # Outdoor temperature values
-    'kodeDataKelembabanOut': [], # Outdoor humidity values
-    'kodeDataCo2': [],        # CO2 values
-    'kodeDataWindspeed': [],  # Wind speed values
-    'kodeDataRainfall': [],    # Rainfall values
-    'kodeDataPar': [],    # PAR values
-    'kodeDataLat': [],   # Latitude values
-    'kodeDataLon': []    # Longitude values
+    'kodeData0000': [],  # Cycle start signal
+    'kodeData0211': [],       # Temperature values 
+    'kodeData0212': [], # Humidity values
+    'kodeData0711': [],   # Outdoor temperature values
+    'kodeData0712': [], # Outdoor humidity values
+    'kodeData0311': [],        # CO2 values
+    'kodeData0411': [],  # Wind speed values
+    'kodeData0511': [],    # Rainfall values
+    'kodeData0611': [],    # PAR values
+    'kodeData1011': [],   # Latitude values
+    'kodeData1012': []    # Longitude values
 }
 
 # Alarm data storage
 alarm_data = {
-    'kodeAlarmSuhuIn': 5,
-    'beritaSuhuIn': 'N/A',
-    'kodeAlarmKelembabanIn': 5,
-    'beritaKelembabanIn': 'N/A',
-    'kodeAlarmSuhuOut': 5,
-    'beritaSuhuOut': 'N/A',
-    'kodeAlarmKelembabanOut': 5,
-    'beritaKelembabanOut': 'N/A',
-    'kodeAlarmCo2': 5,
-    'beritaCo2': 'N/A',
-    'kodeAlarmWindspeed': 5,
-    'beritaWindspeed': 'N/A',
-    'kodeAlarmRainfall': 5,
-    'beritaRainfall': 'N/A',
-    'kodeAlarmPar': 5,
-    'beritaPar': 'N/A',
+    'kodeAlarm0211': 5,
+    'kodeAlarm0212': 5,
+    'kodeAlarm0711': 5,
+    'kodeAlarm0712': 5,
+    'kodeAlarm0311': 5,
+    'kodeAlarm0411': 5,
+    'kodeAlarm0511': 5,
+    'kodeAlarm0611': 5,
+    'kodeAlarm0911': 5,
+    'kodeAlarm0912': 5,
+    'kodeAlarm0913': 5,
+    'berita0211': 'N/A',
+    'berita0212': 'N/A',
+    'berita0711': 'N/A',
+    'berita0712': 'N/A',
+    'berita0311': 'N/A',
+    'berita0411': 'N/A',
+    'berita0511': 'N/A',
+    'berita0611': 'N/A',
+    'berita0911': 'N/A',
+    'berita0912': 'N/A',
+    'berita0913': 'N/A',
 }
 
 # Prediction data storage
 prediction_data = {
-    'kodeDataSuhuPredict1': [],
-    'kodeDataSuhuPredict2': [],
-    'kodeDataSuhuPredict3': [],
-    'kodeDataSuhuPredict4': [],
-    'kodeDataSuhuPredict5': [],
-    'kodeDataHumidityPredict1': [],
-    'kodeDataHumidityPredict2': [],
-    'kodeDataHumidityPredict3': [],
-    'kodeDataHumidityPredict4': [],
-    'kodeDataHumidityPredict5': [],
-    'kodeDataSuhuOutPredict1': [],
-    'kodeDataSuhuOutPredict2': [],
-    'kodeDataSuhuOutPredict3': [],
-    'kodeDataSuhuOutPredict4': [],
-    'kodeDataSuhuOutPredict5': [],
-    'kodeDataHumidityOutPredict1': [],
-    'kodeDataHumidityOutPredict2': [],
-    'kodeDataHumidityOutPredict3': [],
-    'kodeDataHumidityOutPredict4': [],
-    'kodeDataHumidityOutPredict5': [],
-    'kodeDataCo2Predict1': [],
-    'kodeDataCo2Predict2': [],
-    'kodeDataCo2Predict3': [],
-    'kodeDataCo2Predict4': [],
-    'kodeDataCo2Predict5': [],
-    'kodeDataParPredict1': [],
-    'kodeDataParPredict2': [],
-    'kodeDataParPredict3': [],
-    'kodeDataParPredict4': [],
-    'kodeDataParPredict5': [],
-    'kodeDataWindspeedPredict1': [],
-    'kodeDataWindspeedPredict2': [],
-    'kodeDataWindspeedPredict3': [],
-    'kodeDataWindspeedPredict4': [],
-    'kodeDataWindspeedPredict5': [],
-    'kodeDataRainfallPredict1': [],
-    'kodeDataRainfallPredict2': [],
-    'kodeDataRainfallPredict3': [],
-    'kodeDataRainfallPredict4': [],
-    'kodeDataRainfallPredict5': [],
+    'kodeData0213': [],
+    'kodeData0214': [],
+    'kodeData0215': [],
+    'kodeData0216': [],
+    'kodeData0217': [],
+    'kodeData0218': [],
+    'kodeData0219': [],
+    'kodeData0220': [],
+    'kodeData0221': [],
+    'kodeData0222': [],
+    'kodeData0713': [],
+    'kodeData0714': [],
+    'kodeData0715': [],
+    'kodeData0716': [],
+    'kodeData0717': [],
+    'kodeData0718': [],
+    'kodeData0719': [],
+    'kodeData0720': [],
+    'kodeData0721': [],
+    'kodeData0722': [],
+    'kodeData0312': [],
+    'kodeData0313': [],
+    'kodeData0314': [],
+    'kodeData0315': [],
+    'kodeData0316': [],
+    'kodeData0412': [],
+    'kodeData0413': [],
+    'kodeData0414': [],
+    'kodeData0415': [],
+    'kodeData0416': [],
+    'kodeData0512': [],
+    'kodeData0513': [],
+    'kodeData0514': [],
+    'kodeData0515': [],
+    'kodeData0516': [],
+    'kodeData0612': [],
+    'kodeData0613': [],
+    'kodeData0614': [],
+    'kodeData0615': [],
+    'kodeData0616': [],
 }
 
 # Helper function for safe numeric conversion
@@ -391,79 +405,88 @@ def create_secure_ssl_context():
 # Create SSL context
 ssl_context = create_secure_ssl_context()
 
+# MQTT topics
+TOPIC_CYCLE_START = "mcs/kodeData0000"  # Topic for cycle start signal
+
 # TOPIC FOR DATA
-TOPIC_SUHU = "mcs/kodeDataSuhuIn"
-TOPIC_KELEMBABAN = "mcs/kodeDataKelembabanIn"
-TOPIC_SUHU_OUT = "mcs/kodeDataSuhuOut"
-TOPIC_KELEMBABAN_OUT = "mcs/kodeDataKelembabanOut"
-TOPIC_CO2 = "mcs/kodeDataCo2"
-TOPIC_WINDSPEED = "mcs/kodeDataWindspeed"
-TOPIC_RAINFALL = "mcs/kodeDataRainfall"
-TOPIC_PAR = "mcs/kodeDataPar"
-TOPIC_LAT = "mcs/kodeDataLat"
-TOPIC_LON = "mcs/kodeDataLon"
+TOPIC_SUHU = "mcs/kodeData0211"
+TOPIC_KELEMBABAN = "mcs/kodeData0212"
+TOPIC_SUHU_OUT = "mcs/kodeData0711"
+TOPIC_KELEMBABAN_OUT = "mcs/kodeData0712"
+TOPIC_CO2 = "mcs/kodeData0311"
+TOPIC_WINDSPEED = "mcs/kodeData0411"
+TOPIC_RAINFALL = "mcs/kodeData0511"
+TOPIC_PAR = "mcs/kodeData0611"
+TOPIC_LAT = "mcs/kodeData1011"
+TOPIC_LON = "mcs/kodeData1012"
 
 # TOPIC FOR ALARM
-TOPIC_ALARM_SUHU_IN = "mcs/kodeAlarmSuhuIn"
-TOPIC_ALARM_KELEMBABAN_IN = "mcs/kodeAlarmKelembabanIn"
-TOPIC_ALARM_SUHU_OUT = "mcs/kodeAlarmSuhuOut"
-TOPIC_ALARM_KELEMBABAN_OUT = "mcs/kodeAlarmKelembabanOut"
-TOPIC_ALARM_CO2 = "mcs/kodeAlarmCo2"
-TOPIC_ALARM_WINDSPEED = "mcs/kodeAlarmWindspeed"
-TOPIC_ALARM_RAINFALL = "mcs/kodeAlarmRainfall"
-TOPIC_ALARM_PAR = "mcs/kodeAlarmPar"
+TOPIC_ALARM_SUHU_IN = "mcs/kodeAlarm0211"
+TOPIC_ALARM_KELEMBABAN_IN = "mcs/kodeAlarm0212"
+TOPIC_ALARM_SUHU_OUT = "mcs/kodeAlarm0711"
+TOPIC_ALARM_KELEMBABAN_OUT = "mcs/kodeAlarm0712"
+TOPIC_ALARM_CO2 = "mcs/kodeAlarm0311"
+TOPIC_ALARM_WINDSPEED = "mcs/kodeAlarm0411"
+TOPIC_ALARM_RAINFALL = "mcs/kodeAlarm0511"
+TOPIC_ALARM_PAR = "mcs/kodeAlarm0611"
+TOPIC_ALARM_VOLTAGE_AC = "mcs/kodeAlarm0911"
+TOPIC_ALARM_CURRENT_AC = "mcs/kodeAlarm0912"
+TOPIC_ALARM_POWER_AC = "mcs/kodeAlarm0913"
 
 # TOPIC FOR BERITA
-TOPIC_BERITA_SUHU_IN = "mcs/beritaSuhuIn"
-TOPIC_BERITA_KELEMBABAN_IN = "mcs/beritaKelembabanIn"
-TOPIC_BERITA_SUHU_OUT = "mcs/beritaSuhuOut"
-TOPIC_BERITA_KELEMBABAN_OUT = "mcs/beritaKelembabanOut"
-TOPIC_BERITA_CO2 = "mcs/beritaCo2"
-TOPIC_BERITA_WINDSPEED = "mcs/beritaWindspeed"
-TOPIC_BERITA_RAINFALL = "mcs/beritaRainfall"
-TOPIC_BERITA_PAR = "mcs/beritaPar"
+TOPIC_BERITA_SUHU_IN = "mcs/berita0211"
+TOPIC_BERITA_KELEMBABAN_IN = "mcs/berita0212"
+TOPIC_BERITA_SUHU_OUT = "mcs/berita0711"
+TOPIC_BERITA_KELEMBABAN_OUT = "mcs/berita0712"
+TOPIC_BERITA_CO2 = "mcs/berita0311"
+TOPIC_BERITA_WINDSPEED = "mcs/berita0411"
+TOPIC_BERITA_RAINFALL = "mcs/berita0511"
+TOPIC_BERITA_PAR = "mcs/berita0611"
+TOPIC_BERITA_VOLTAGE_AC = "mcs/berita0911"
+TOPIC_BERITA_CURRENT_AC = "mcs/berita0912"
+TOPIC_BERITA_POWER_AC = "mcs/berita0913"
 
 # TOPIC FOR PREDICTION
-TOPIC_SUHU_PREDICT1 = "mcs/kodeDataSuhuPredict1"
-TOPIC_SUHU_PREDICT2 = "mcs/kodeDataSuhuPredict2"
-TOPIC_SUHU_PREDICT3 = "mcs/kodeDataSuhuPredict3"
-TOPIC_SUHU_PREDICT4 = "mcs/kodeDataSuhuPredict4"
-TOPIC_SUHU_PREDICT5 = "mcs/kodeDataSuhuPredict5"
-TOPIC_HUMIDITY_PREDICT1 = "mcs/kodeDataHumidityPredict1"
-TOPIC_HUMIDITY_PREDICT2 = "mcs/kodeDataHumidityPredict2"
-TOPIC_HUMIDITY_PREDICT3 = "mcs/kodeDataHumidityPredict3"
-TOPIC_HUMIDITY_PREDICT4 = "mcs/kodeDataHumidityPredict4"
-TOPIC_HUMIDITY_PREDICT5 = "mcs/kodeDataHumidityPredict5"
-TOPIC_SUHUOUT_PREDICT1 = "mcs/kodeDataSuhuOutPredict1"
-TOPIC_SUHUOUT_PREDICT2 = "mcs/kodeDataSuhuOutPredict2"
-TOPIC_SUHUOUT_PREDICT3 = "mcs/kodeDataSuhuOutPredict3"
-TOPIC_SUHUOUT_PREDICT4 = "mcs/kodeDataSuhuOutPredict4"
-TOPIC_SUHUOUT_PREDICT5 = "mcs/kodeDataSuhuOutPredict5"
-TOPIC_HUMIDITYOUT_PREDICT1 = "mcs/kodeDataHumidityOutPredict1"
-TOPIC_HUMIDITYOUT_PREDICT2 = "mcs/kodeDataHumidityOutPredict2"
-TOPIC_HUMIDITYOUT_PREDICT3 = "mcs/kodeDataHumidityOutPredict3"
-TOPIC_HUMIDITYOUT_PREDICT4 = "mcs/kodeDataHumidityOutPredict4"
-TOPIC_HUMIDITYOUT_PREDICT5 = "mcs/kodeDataHumidityOutPredict5"
-TOPIC_CO2_PREDICT1 = "mcs/kodeDataCo2Predict1"
-TOPIC_CO2_PREDICT2 = "mcs/kodeDataCo2Predict2"
-TOPIC_CO2_PREDICT3 = "mcs/kodeDataCo2Predict3"
-TOPIC_CO2_PREDICT4 = "mcs/kodeDataCo2Predict4"
-TOPIC_CO2_PREDICT5 = "mcs/kodeDataCo2Predict5"
-TOPIC_PAR_PREDICT1 = "mcs/kodeDataParPredict1"
-TOPIC_PAR_PREDICT2 = "mcs/kodeDataParPredict2"
-TOPIC_PAR_PREDICT3 = "mcs/kodeDataParPredict3"
-TOPIC_PAR_PREDICT4 = "mcs/kodeDataParPredict4"
-TOPIC_PAR_PREDICT5 = "mcs/kodeDataParPredict5"
-TOPIC_WINDSPEED_PREDICT1 = "mcs/kodeDataWindspeedPredict1"
-TOPIC_WINDSPEED_PREDICT2 = "mcs/kodeDataWindspeedPredict2"
-TOPIC_WINDSPEED_PREDICT3 = "mcs/kodeDataWindspeedPredict3"
-TOPIC_WINDSPEED_PREDICT4 = "mcs/kodeDataWindspeedPredict4"
-TOPIC_WINDSPEED_PREDICT5 = "mcs/kodeDataWindspeedPredict5"
-TOPIC_RAINFALL_PREDICT1 = "mcs/kodeDataRainfallPredict1"
-TOPIC_RAINFALL_PREDICT2 = "mcs/kodeDataRainfallPredict2"
-TOPIC_RAINFALL_PREDICT3 = "mcs/kodeDataRainfallPredict3"
-TOPIC_RAINFALL_PREDICT4 = "mcs/kodeDataRainfallPredict4"
-TOPIC_RAINFALL_PREDICT5 = "mcs/kodeDataRainfallPredict5"
+TOPIC_SUHU_PREDICT1 = "mcs/kodeData0213"
+TOPIC_SUHU_PREDICT2 = "mcs/kodeData0214"
+TOPIC_SUHU_PREDICT3 = "mcs/kodeData0215"
+TOPIC_SUHU_PREDICT4 = "mcs/kodeData0216"
+TOPIC_SUHU_PREDICT5 = "mcs/kodeData0217"
+TOPIC_HUMIDITY_PREDICT1 = "mcs/kodeData0218"
+TOPIC_HUMIDITY_PREDICT2 = "mcs/kodeData0219"
+TOPIC_HUMIDITY_PREDICT3 = "mcs/kodeData0220"
+TOPIC_HUMIDITY_PREDICT4 = "mcs/kodeData0221"
+TOPIC_HUMIDITY_PREDICT5 = "mcs/kodeData0222"
+TOPIC_SUHUOUT_PREDICT1 = "mcs/kodeData0713"
+TOPIC_SUHUOUT_PREDICT2 = "mcs/kodeData0714"
+TOPIC_SUHUOUT_PREDICT3 = "mcs/kodeData0715"
+TOPIC_SUHUOUT_PREDICT4 = "mcs/kodeData0716"
+TOPIC_SUHUOUT_PREDICT5 = "mcs/kodeData0717"
+TOPIC_HUMIDITYOUT_PREDICT1 = "mcs/kodeData0718"
+TOPIC_HUMIDITYOUT_PREDICT2 = "mcs/kodeData0719"
+TOPIC_HUMIDITYOUT_PREDICT3 = "mcs/kodeData0720"
+TOPIC_HUMIDITYOUT_PREDICT4 = "mcs/kodeData0721"
+TOPIC_HUMIDITYOUT_PREDICT5 = "mcs/kodeData0722"
+TOPIC_CO2_PREDICT1 = "mcs/kodeData0312"
+TOPIC_CO2_PREDICT2 = "mcs/kodeData0313"
+TOPIC_CO2_PREDICT3 = "mcs/kodeData0314"
+TOPIC_CO2_PREDICT4 = "mcs/kodeData0315"
+TOPIC_CO2_PREDICT5 = "mcs/kodeData0316"
+TOPIC_WINDSPEED_PREDICT1 = "mcs/kodeData0412"
+TOPIC_WINDSPEED_PREDICT2 = "mcs/kodeData0413"
+TOPIC_WINDSPEED_PREDICT3 = "mcs/kodeData0414"
+TOPIC_WINDSPEED_PREDICT4 = "mcs/kodeData0415"
+TOPIC_WINDSPEED_PREDICT5 = "mcs/kodeData0416"
+TOPIC_RAINFALL_PREDICT1 = "mcs/kodeData0512"
+TOPIC_RAINFALL_PREDICT2 = "mcs/kodeData0513"
+TOPIC_RAINFALL_PREDICT3 = "mcs/kodeData0514"
+TOPIC_RAINFALL_PREDICT4 = "mcs/kodeData0515"
+TOPIC_RAINFALL_PREDICT5 = "mcs/kodeData0516"
+TOPIC_PAR_PREDICT1 = "mcs/kodeData0612"
+TOPIC_PAR_PREDICT2 = "mcs/kodeData0613"
+TOPIC_PAR_PREDICT3 = "mcs/kodeData0614"
+TOPIC_PAR_PREDICT4 = "mcs/kodeData0615"
+TOPIC_PAR_PREDICT5 = "mcs/kodeData0616"
 
 # NEW: Function to check if data is stale
 def is_data_stale():
@@ -501,7 +524,8 @@ def reset_to_default_values():
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to HiveMQ Broker")
-        client.subscribe([(TOPIC_SUHU, 0), (TOPIC_KELEMBABAN, 0),
+        client.subscribe([(TOPIC_CYCLE_START, 0),
+                          (TOPIC_SUHU, 0), (TOPIC_KELEMBABAN, 0),
                           (TOPIC_SUHU_OUT, 0), (TOPIC_KELEMBABAN_OUT, 0),
                           (TOPIC_CO2, 0), (TOPIC_WINDSPEED, 0), 
                           (TOPIC_RAINFALL, 0), (TOPIC_PAR, 0),
@@ -510,6 +534,9 @@ def on_connect(client, userdata, flags, rc):
                           (TOPIC_ALARM_SUHU_OUT, 0), (TOPIC_ALARM_KELEMBABAN_OUT, 0),
                           (TOPIC_ALARM_CO2, 0), (TOPIC_ALARM_WINDSPEED, 0),
                           (TOPIC_ALARM_RAINFALL, 0), (TOPIC_ALARM_PAR, 0),
+                          (TOPIC_ALARM_VOLTAGE_AC, 0), (TOPIC_ALARM_CURRENT_AC, 0),
+                          (TOPIC_ALARM_POWER_AC, 0), (TOPIC_BERITA_VOLTAGE_AC, 0),
+                          (TOPIC_BERITA_CURRENT_AC, 0), (TOPIC_BERITA_POWER_AC, 0),
                           (TOPIC_BERITA_SUHU_IN, 0), (TOPIC_BERITA_KELEMBABAN_IN, 0),
                           (TOPIC_BERITA_SUHU_OUT, 0), (TOPIC_BERITA_KELEMBABAN_OUT, 0),
                           (TOPIC_BERITA_CO2, 0), (TOPIC_BERITA_WINDSPEED, 0),
@@ -561,9 +588,9 @@ def on_message(client, userdata, msg):
         topic = msg.topic.split('/')[-1]  # Get the last part of the topic
         
         # Process regular data topics
-        if topic in ['kodeDataSuhuIn', 'kodeDataKelembabanIn', 'kodeDataSuhuOut', 'kodeDataKelembabanOut',
-                    'kodeDataCo2', 'kodeDataWindspeed', 'kodeDataRainfall', 'kodeDataPar',
-                    'kodeDataLat', 'kodeDataLon']:
+        if topic in ['kodeData0000', 'kodeData0211', 'kodeData0212', 'kodeData0711', 'kodeData0712',
+                    'kodeData0311', 'kodeData0411', 'kodeData0511', 'kodeData0611',
+                    'kodeData1011', 'kodeData1012']:
             payload = float(msg.payload.decode())
             current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
             
@@ -573,7 +600,7 @@ def on_message(client, userdata, msg):
             data[topic].append(payload)
             
             # FIXED: Update waktu
-            if topic == 'kodeDataSuhuIn':
+            if topic == 'kodeData0000':
                 if len(data['waktu']) >= 20:
                     data['waktu'] = data['waktu'][1:]
                 data['waktu'].append(current_time)
@@ -597,7 +624,17 @@ def on_message(client, userdata, msg):
             print(f"Updated berita {topic}: {berita_value}")
 
         # Process prediction data topics
-        elif topic.startswith('kodeDataSuhuPredict') or topic.startswith('kodeDataHumidityPredict') or topic.startswith('kodeDataSuhuOutPredict') or topic.startswith('kodeDataHumidityOutPredict') or topic.startswith('kodeDataCo2Predict') or topic.startswith('kodeDataParPredict') or topic.startswith('kodeDataWindspeedPredict') or topic.startswith('kodeDataRainfallPredict'):
+        elif  topic in ['kodeData0213', 'kodeData0214', 'kodeData0215', 'kodeData0216',
+                    'kodeData0217', 'kodeData0218', 'kodeData0219', 'kodeData0220',
+                    'kodeData0221', 'kodeData0222', 'kodeData0713', 'kodeData0714', 
+                    'kodeData0715', 'kodeData0716', 'kodeData0717', 'kodeData0718',
+                    'kodeData0719', 'kodeData0720', 'kodeData0721', 'kodeData0722',
+                    'kodeData0312', 'kodeData0313', 'kodeData0314', 'kodeData0315',
+                    'kodeData0316', 'kodeData0412', 'kodeData0413', 'kodeData0414',
+                    'kodeData0415', 'kodeData0416', 'kodeData0512', 'kodeData0513',
+                    'kodeData0514', 'kodeData0515', 'kodeData0516', 'kodeData0612',
+                    'kodeData0613', 'kodeData0614', 'kodeData0615', 'kodeData0616']:
+            # Process prediction values
             try:
                 predict_value = float(msg.payload.decode())
                 prediction_data[topic].append(predict_value)
@@ -742,14 +779,14 @@ def display_page(pathname):
 def update_main_dashboard(n):
     try:
         # Get latest values or default if no data
-        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else DEFAULT_VALUES['kodeDataSuhuIn']
-        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else DEFAULT_VALUES['kodeDataKelembabanIn']
-        suhu_out = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else DEFAULT_VALUES['kodeDataSuhuOut']
-        kelembaban_out = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else DEFAULT_VALUES['kodeDataKelembabanOut']
-        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else DEFAULT_VALUES['kodeDataCo2']
-        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else DEFAULT_VALUES['kodeDataWindspeed']
-        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else DEFAULT_VALUES['kodeDataRainfall']
-        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else DEFAULT_VALUES['kodeDataPar']
+        suhu = data['kodeData0211'][-1] if data['kodeData0211'] else DEFAULT_VALUES['kodeData0211']
+        kelembaban = data['kodeData0212'][-1] if data['kodeData0212'] else DEFAULT_VALUES['kodeData0212']
+        suhu_out = data['kodeData0711'][-1] if data['kodeData0711'] else DEFAULT_VALUES['kodeData0711']
+        kelembaban_out = data['kodeData0712'][-1] if data['kodeData0712'] else DEFAULT_VALUES['kodeData0712']
+        co2 = data['kodeData0311'][-1] if data['kodeData0311'] else DEFAULT_VALUES['kodeData0311']
+        windspeed = data['kodeData0411'][-1] if data['kodeData0411'] else DEFAULT_VALUES['kodeData0411']
+        rainfall = data['kodeData0511'][-1] if data['kodeData0511'] else DEFAULT_VALUES['kodeData0511']
+        par = data['kodeData0611'][-1] if data['kodeData0611'] else DEFAULT_VALUES['kodeData0611']
 
         return (
             f" {suhu}°C",
@@ -800,12 +837,12 @@ def update_th_in_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataSuhuIn'] or not data['kodeDataKelembabanIn'] or not data['waktu']:
+        if not data['kodeData0211'] or not data['kodeData0212'] or not data['waktu']:
             return suhu_value, kelembaban_value, empty_temp_fig, empty_humid_fig
         
         # Get the latest values
-        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else DEFAULT_VALUES['kodeDataSuhuIn']
-        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else DEFAULT_VALUES['kodeDataKelembabanIn']
+        suhu = data['kodeData0211'][-1] if data['kodeData0211'] else DEFAULT_VALUES['kodeData0211']
+        kelembaban = data['kodeData0212'][-1] if data['kodeData0212'] else DEFAULT_VALUES['kodeData0212']
         suhu_value = f"{suhu}°C"
         kelembaban_value = f"{kelembaban}%"
         
@@ -814,16 +851,16 @@ def update_th_in_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataSuhuIn']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0211']) > 3:
                 # We'll use only 4 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataSuhuIn']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0211']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataSuhuIn'][i] for i in indices]
+                selected_values = [data['kodeData0211'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -888,16 +925,16 @@ def update_th_in_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataKelembabanIn']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0212']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataKelembabanIn']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0212']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataKelembabanIn'][i] for i in indices]
+                selected_values = [data['kodeData0212'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1010,12 +1047,12 @@ def update_th_out_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataSuhuOut'] or not data['kodeDataKelembabanOut'] or not data['waktu']:
+        if not data['kodeData0711'] or not data['kodeData0712'] or not data['waktu']:
             return suhu_value, kelembaban_value, empty_temp_fig, empty_humid_fig
         
         # Get the latest values
-        suhu = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else DEFAULT_VALUES['kodeDataSuhuOut']
-        kelembaban = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else DEFAULT_VALUES['kodeDataKelembabanOut']
+        suhu = data['kodeData0711'][-1] if data['kodeData0711'] else DEFAULT_VALUES['kodeData0711']
+        kelembaban = data['kodeData0712'][-1] if data['kodeData0712'] else DEFAULT_VALUES['kodeData0712']
         suhu_value = f"{suhu}°C"
         kelembaban_value = f"{kelembaban}%"
 
@@ -1024,16 +1061,16 @@ def update_th_out_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataSuhuOut']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0711']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataSuhuOut']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0711']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataSuhuOut'][i] for i in indices]
+                selected_values = [data['kodeData0711'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1098,16 +1135,16 @@ def update_th_out_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataKelembabanOut']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0712']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataKelembabanOut']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0712']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataKelembabanOut'][i] for i in indices]
+                selected_values = [data['kodeData0712'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1207,11 +1244,11 @@ def update_windspeed_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataWindspeed'] or not data['waktu']:
+        if not data['kodeData0411'] or not data['waktu']:
             return windspeed_value, empty_windspeed_fig
         
         # Get the latest values
-        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else DEFAULT_VALUES['kodeDataWindspeed']
+        windspeed = data['kodeData0411'][-1] if data['kodeData0411'] else DEFAULT_VALUES['kodeData0411']
         windspeed_value = f"{windspeed}m/s"
         
         # Create windspeed graph with properly aligned x and y values
@@ -1219,16 +1256,16 @@ def update_windspeed_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataWindspeed']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0411']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataWindspeed']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0411']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataWindspeed'][i] for i in indices]
+                selected_values = [data['kodeData0411'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1328,11 +1365,11 @@ def update_rainfall_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataRainfall'] or not data['waktu']:
+        if not data['kodeData0511'] or not data['waktu']:
             return rainfall_value, empty_rainfall_fig
         
         # Get the latest values
-        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else DEFAULT_VALUES['kodeDataRainfall']
+        rainfall = data['kodeData0511'][-1] if data['kodeData0511'] else DEFAULT_VALUES['kodeData0511']
         rainfall_value = f"{rainfall}mm"
         
         # Create rainfall graph with properly aligned x and y values
@@ -1340,16 +1377,16 @@ def update_rainfall_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataRainfall']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0511']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataRainfall']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0511']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataRainfall'][i] for i in indices]
+                selected_values = [data['kodeData0511'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1449,11 +1486,11 @@ def update_co2_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataCo2'] or not data['waktu']:
+        if not data['kodeData0311'] or not data['waktu']:
             return co2_value, co2_fig
         
         # Get the latest values
-        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else DEFAULT_VALUES['kodeDataCo2']
+        co2 = data['kodeData0311'][-1] if data['kodeData0311'] else DEFAULT_VALUES['kodeData0311']
         co2_value = f"{co2}PPM"
         
 
@@ -1462,16 +1499,16 @@ def update_co2_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataCo2']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0311']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataCo2']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0311']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataCo2'][i] for i in indices]
+                selected_values = [data['kodeData0311'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1571,11 +1608,11 @@ def update_par_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataPar'] or not data['waktu']:
+        if not data['kodeData0611'] or not data['waktu']:
             return par_value, par_fig
         
         # Get the latest values
-        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else DEFAULT_VALUES['kodeDataPar']
+        par = data['kodeData0611'][-1] if data['kodeData0611'] else DEFAULT_VALUES['kodeData0611']
         par_value = f"{par}μmol/m²/s"
         
         # Create par graph with properly aligned x and y values
@@ -1583,16 +1620,16 @@ def update_par_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataPar']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0611']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataPar']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0611']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataPar'][i] for i in indices]
+                selected_values = [data['kodeData0611'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1690,28 +1727,28 @@ def update_realtime_table(n_intervals):
                 table_row = {
                     "Time": data['waktu'][i] if i < len(data['waktu']) else "N/A",
                     "Temp In (°C)": safe_float_convert(
-                        data['kodeDataSuhuIn'][i] if i < len(data['kodeDataSuhuIn']) else None
+                        data['kodeData0211'][i] if i < len(data['kodeData0211']) else None
                     ),
                     "Humidity In (%)": safe_float_convert(
-                        data['kodeDataKelembabanIn'][i] if i < len(data['kodeDataKelembabanIn']) else None
+                        data['kodeData0212'][i] if i < len(data['kodeData0212']) else None
                     ),
                     "Temp Out (°C)": safe_float_convert(
-                        data['kodeDataSuhuOut'][i] if i < len(data['kodeDataSuhuOut']) else None
+                        data['kodeData0711'][i] if i < len(data['kodeData0711']) else None
                     ),
                     "Humidity Out (%)": safe_float_convert(
-                        data['kodeDataKelembabanOut'][i] if i < len(data['kodeDataKelembabanOut']) else None
+                        data['kodeData0712'][i] if i < len(data['kodeData0712']) else None
                     ),
                     "PAR (μmol/m²/s)": safe_float_convert(
-                        data['kodeDataPar'][i] if i < len(data['kodeDataPar']) else None
+                        data['kodeData0611'][i] if i < len(data['kodeData0611']) else None
                     ),
                     "CO2 (PPM)": safe_float_convert(
-                        data['kodeDataCo2'][i] if i < len(data['kodeDataCo2']) else None
+                        data['kodeData0311'][i] if i < len(data['kodeData0311']) else None
                     ),
                     "Windspeed (m/s)": safe_float_convert(
-                        data['kodeDataWindspeed'][i] if i < len(data['kodeDataWindspeed']) else None
+                        data['kodeData0411'][i] if i < len(data['kodeData0411']) else None
                     ),
                     "Rainfall (mm)": safe_float_convert(
-                        data['kodeDataRainfall'][i] if i < len(data['kodeDataRainfall']) else None
+                        data['kodeData0511'][i] if i < len(data['kodeData0511']) else None
                     )
                 }
                 table_data.append(table_row)
@@ -1787,10 +1824,10 @@ def update_gps_data(n_intervals):
             return fallback_value
     
     # Check if we have GPS data from MQTT
-    if data["kodeDataLat"] and data["kodeDataLon"]:
+    if data["kodeData1011"] and data["kodeData1012"]:
         # Use the latest GPS coordinates from the MQTT data with safe conversion
-        raw_lat = data["kodeDataLat"][-1] if len(data["kodeDataLat"]) > 0 else None
-        raw_lon = data["kodeDataLon"][-1] if len(data["kodeDataLon"]) > 0 else None
+        raw_lat = data["kodeData1011"][-1] if len(data["kodeData1011"]) > 0 else None
+        raw_lon = data["kodeData1012"][-1] if len(data["kodeData1012"]) > 0 else None
         
         current_lat = safe_coordinate_convert(raw_lat, efarming_location["lat"])
         current_lon = safe_coordinate_convert(raw_lon, efarming_location["lon"])
@@ -1894,7 +1931,16 @@ def update_gps_data(n_intervals):
      Output("windspeed-circle", "className"),
      Output("rainfall-alarm", "children"),
      Output("rainfall-berita", "children"),
-     Output("rainfall-circle", "className")],
+     Output("rainfall-circle", "className"),
+     Output("voltage-ac-alarm", "children"),
+     Output("voltage-ac-berita", "children"),
+     Output("voltage-ac-circle", "className"),
+     Output("current-ac-alarm", "children"),
+     Output("current-ac-berita", "children"),
+     Output("current-ac-circle", "className"),
+     Output("power-ac-alarm", "children"),
+     Output("power-ac-berita", "children"),
+     Output("power-ac-circle", "className")],
     [Input("interval-alarm", "n_intervals")]
 )
 def update_alarm_values(n):
@@ -1909,30 +1955,39 @@ def update_alarm_values(n):
             return "status-circle status-black"
     
     return (
-        alarm_data['kodeAlarmSuhuIn'],
-        alarm_data['beritaSuhuIn'],
-        get_circle_class(alarm_data['kodeAlarmSuhuIn']),
-        alarm_data['kodeAlarmKelembabanIn'],
-        alarm_data['beritaKelembabanIn'],
-        get_circle_class(alarm_data['kodeAlarmKelembabanIn']),
-        alarm_data['kodeAlarmSuhuOut'],
-        alarm_data['beritaSuhuOut'],
-        get_circle_class(alarm_data['kodeAlarmSuhuOut']),
-        alarm_data['kodeAlarmKelembabanOut'],
-        alarm_data['beritaKelembabanOut'],
-        get_circle_class(alarm_data['kodeAlarmKelembabanOut']),
-        alarm_data['kodeAlarmPar'],
-        alarm_data['beritaPar'],
-        get_circle_class(alarm_data['kodeAlarmPar']),
-        alarm_data['kodeAlarmCo2'],
-        alarm_data['beritaCo2'],
-        get_circle_class(alarm_data['kodeAlarmCo2']),
-        alarm_data['kodeAlarmWindspeed'],
-        alarm_data['beritaWindspeed'],
-        get_circle_class(alarm_data['kodeAlarmWindspeed']),
-        alarm_data['kodeAlarmRainfall'],
-        alarm_data['beritaRainfall'],
-        get_circle_class(alarm_data['kodeAlarmRainfall'])
+        alarm_data['kodeAlarm0211'],
+        alarm_data['berita0211'],
+        get_circle_class(alarm_data['kodeAlarm0211']),
+        alarm_data['kodeAlarm0212'],
+        alarm_data['berita0212'],
+        get_circle_class(alarm_data['kodeAlarm0212']),
+        alarm_data['kodeAlarm0711'],
+        alarm_data['berita0711'],
+        get_circle_class(alarm_data['kodeAlarm0711']),
+        alarm_data['kodeAlarm0712'],
+        alarm_data['berita0712'],
+        get_circle_class(alarm_data['kodeAlarm0712']),
+        alarm_data['kodeAlarm0611'],
+        alarm_data['berita0611'],
+        get_circle_class(alarm_data['kodeAlarm0611']),
+        alarm_data['kodeAlarm0311'],
+        alarm_data['berita0311'],
+        get_circle_class(alarm_data['kodeAlarm0311']),
+        alarm_data['kodeAlarm0411'],
+        alarm_data['berita0411'],
+        get_circle_class(alarm_data['kodeAlarm0411']),
+        alarm_data['kodeAlarm0511'],
+        alarm_data['berita0511'],
+        get_circle_class(alarm_data['kodeAlarm0511']),
+        alarm_data['kodeAlarm0911'],
+        alarm_data['berita0911'],
+        get_circle_class(alarm_data['kodeAlarm0911']),
+        alarm_data['kodeAlarm0912'],
+        alarm_data['berita0912'],
+        get_circle_class(alarm_data['kodeAlarm0912']),
+        alarm_data['kodeAlarm0913'],
+        alarm_data['berita0913'],
+        get_circle_class(alarm_data['kodeAlarm0913'])
     )
 
 # Callback for prediction graphs temperature and humidity indoor
@@ -1942,7 +1997,7 @@ def update_alarm_values(n):
     [Input('interval_thin', 'n_intervals')]
 )
 def update_prediction_graphs(n):
-    # Temperature prediction graph
+# Temperature prediction graph
     temp_fig = go.Figure()
     
     if data['waktu'] and len(data['waktu']) > 0:
@@ -1957,13 +2012,15 @@ def update_prediction_graphs(n):
         temp_predictions = []
         
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        # Using kodeData0213 to kodeData0217 for temperature predictions
+        temp_codes = ['kodeData0213', 'kodeData0214', 'kodeData0215', 'kodeData0216', 'kodeData0217']
+        
+        for i, pred_key in enumerate(temp_codes, 1):
             # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataSuhuPredict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 temp_predictions.append(prediction_data[pred_key][-1])
             else:
@@ -2057,17 +2114,20 @@ def update_prediction_graphs(n):
         
         future_times = []
         humidity_predictions = []
-        
+
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        humidity_codes = ['kodeData0218', 'kodeData0219', 'kodeData0220', 'kodeData0221', 'kodeData0222']
+        
+        for i, pred_key in enumerate(humidity_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataHumidityPredict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 humidity_predictions.append(prediction_data[pred_key][-1])
             else:
+                # Use a reasonable default or interpolation
                 humidity_predictions.append(None)
         
         # Debug: Print the values to check
@@ -2166,15 +2226,16 @@ def update_prediction_graphs(n):
         
         future_times = []
         temp_predictions = []
-        
+
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        temp_codes = ['kodeData0713', 'kodeData0714', 'kodeData0715', 'kodeData0716', 'kodeData0717']
+        # Using kodeData0713 to kodeData0717 for temperature predictions
+        for i, pred_key in enumerate(temp_codes, 1):
             # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataSuhuOutPredict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 temp_predictions.append(prediction_data[pred_key][-1])
             else:
@@ -2268,17 +2329,20 @@ def update_prediction_graphs(n):
         
         future_times = []
         humidity_predictions = []
-        
+
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        humidity_codes = ['kodeData0718', 'kodeData0719', 'kodeData0720', 'kodeData0721', 'kodeData0722']
+        
+        for i, pred_key in enumerate(humidity_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataHumidityOutPredict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 humidity_predictions.append(prediction_data[pred_key][-1])
             else:
+                # Use a reasonable default or interpolation
                 humidity_predictions.append(None)
         
         # Debug: Print the values to check
@@ -2376,15 +2440,16 @@ def update_prediction_graphs(n):
         
         future_times = []
         co2_prediction = []
-        
+
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        co2_codes = ['kodeData0312', 'kodeData0313', 'kodeData0314', 'kodeData0315', 'kodeData0316']
+        
+        for i, pred_key in enumerate(co2_codes, 1):
             # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataCo2Predict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 co2_prediction.append(prediction_data[pred_key][-1])
             else:
@@ -2488,13 +2553,14 @@ def update_prediction_graphs(n):
         par_prediction = []
         
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        par_codes = ['kodeData0612', 'kodeData0613', 'kodeData0614', 'kodeData0615', 'kodeData0616']
+        
+        for i, pred_key in enumerate(par_codes, 1):
             # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataParPredict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 par_prediction.append(prediction_data[pred_key][-1])
             else:
@@ -2598,13 +2664,14 @@ def update_prediction_graphs(n):
         windspeed_prediction = []
         
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        windspeed_codes = ['kodeData0412', 'kodeData0413', 'kodeData0414', 'kodeData0415', 'kodeData0416']
+        
+        for i, pred_key in enumerate(windspeed_codes, 1):
             # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataWindspeedPredict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 windspeed_prediction.append(prediction_data[pred_key][-1])
             else:
@@ -2708,13 +2775,14 @@ def update_prediction_graphs(n):
         rainfall_prediction = []
         
         # Create timestamps and get prediction values for next 1-5 minutes
-        for i in range(1, 6):
+        rainfall_codes = ['kodeData0512', 'kodeData0513', 'kodeData0514', 'kodeData0515', 'kodeData0516']
+        
+        for i, pred_key in enumerate(rainfall_codes, 1):
             # Use datetime arithmetic instead of pd.Timedelta
             future_time = last_time + pd.Timedelta(minutes=i)
             future_times.append(future_time)
             
             # Get the latest prediction value for each minute ahead
-            pred_key = f'kodeDataRainfallPredict{i}'
             if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
                 rainfall_prediction.append(prediction_data[pred_key][-1])
             else:

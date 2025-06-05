@@ -183,19 +183,82 @@ engineer_alarm_layout = html.Div([
                 ])
             ], className="param-card")
         ], className="col-md-4 mb-3"),
+
+        # Voltage AC
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.H5("Voltage AC (V)", className="param-title"),
+                    html.Div(id="voltage-ac-circle", className="status-circle")
+                ], className="title-with-circle"),
+                html.Div([
+                    html.Div([
+                        html.Strong("kodeAlarm:", className="me-2"),
+                        html.Span(id="voltage-ac-alarm", children="0")
+                    ], className="d-flex justify-content-between"),
+                    html.Div([
+                        html.Strong("berita:", className="me-2"),
+                        html.Span(id="voltage-ac-berita", children="Normal")
+                    ], className="d-flex justify-content-between")
+                ])
+            ], className="param-card")
+        ], className="col-md-4 mb-3"),
+    ], className="row mx-1"),
+
+    # PARAMETER CARDS - ROW 4
+    html.Div([
+        # Current AC
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.H5("Current AC (A)", className="param-title"),
+                    html.Div(id="current-ac-circle", className="status-circle")
+                ], className="title-with-circle"),
+                html.Div([
+                    html.Div([
+                        html.Strong("kodeAlarm:", className="me-2"),
+                        html.Span(id="current-ac-alarm", children="0")
+                    ], className="d-flex justify-content-between"),
+                    html.Div([
+                        html.Strong("berita:", className="me-2"),
+                        html.Span(id="current-ac-berita", children="Normal")
+                    ], className="d-flex justify-content-between")
+                ])
+            ], className="param-card")
+        ], className="col-md-4 mb-3"),
+
+        # Power AC
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.H5("Power AC (W)", className="param-title"),
+                    html.Div(id="power-ac-circle", className="status-circle")
+                ], className="title-with-circle"),
+                html.Div([
+                    html.Div([
+                        html.Strong("kodeAlarm:", className="me-2"),
+                        html.Span(id="power-ac-alarm", children="0")
+                    ], className="d-flex justify-content-between"),
+                    html.Div([
+                        html.Strong("berita:", className="me-2"),
+                        html.Span(id="power-ac-berita", children="Normal")
+                    ], className="d-flex justify-content-between")
+                ])
+            ], className="param-card")
+        ], className="col-md-4 mb-3"),
         
         # Button Section
         html.Div([
             # html.Button("SETTING", className="btn btn-secondary m-1"),
-            dcc.Link("MCS", href="/dash/engineer/", className="btn btn-secondary m-1"),
-            dcc.Link("T&H INDOOR", href="/dash/engineer/th-in", className="btn btn-secondary m-1"),
-            dcc.Link("PAR", href="/dash/engineer/par", className="btn btn-secondary m-1"),
-            dcc.Link("CO2", href="/dash/engineer/co2", className="btn btn-secondary m-1"),
-            dcc.Link("T&H OUTDOOR", href="/dash/engineer/th-out", className="btn btn-secondary m-1"),
-            dcc.Link("WINDSPEED", href="/dash/engineer/windspeed", className="btn btn-secondary m-1"),
-            dcc.Link("RAINFALL", href="/dash/engineer/rainfall", className="btn btn-secondary m-1"),
-            html.Button("LOGOUT", id="logout-button", className="btn btn-dark m-1"),
-            dcc.Location(id="logout-redirect", refresh=True)  # Handles redirection
+            dcc.Link("MCS", href="/dash/", className="btn btn-secondary m-1"),
+            dcc.Link("T&H INDOOR", href="/dash/th-in", className="btn btn-secondary m-1"),
+            dcc.Link("PAR", href="/dash/par", className="btn btn-secondary m-1"),
+            dcc.Link("CO2", href="/dash/co2", className="btn btn-secondary m-1"),
+            dcc.Link("T&H OUTDOOR", href="/dash/th-out", className="btn btn-secondary m-1"),
+            dcc.Link("WINDSPEED", href="/dash/windspeed", className="btn btn-secondary m-1"),
+            dcc.Link("RAINFALL", href="/dash/rainfall", className="btn btn-secondary m-1"),
+            html.Button("LOGIN", id="login-button", className="btn btn-dark m-1"),
+            dcc.Location(id="login-redirect", refresh=True)  # Handles redirection
         ], className="d-flex flex-wrap justify-content-end mb-4")
         
         # Empty card or additional parameter if needed

@@ -183,6 +183,69 @@ alarm_layout = html.Div([
                 ])
             ], className="param-card")
         ], className="col-md-4 mb-3"),
+
+        # Voltage AC
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.H5("Voltage AC (V)", className="param-title"),
+                    html.Div(id="voltage-ac-circle", className="status-circle")
+                ], className="title-with-circle"),
+                html.Div([
+                    html.Div([
+                        html.Strong("kodeAlarm:", className="me-2"),
+                        html.Span(id="voltage-ac-alarm", children="0")
+                    ], className="d-flex justify-content-between"),
+                    html.Div([
+                        html.Strong("berita:", className="me-2"),
+                        html.Span(id="voltage-ac-berita", children="Normal")
+                    ], className="d-flex justify-content-between")
+                ])
+            ], className="param-card")
+        ], className="col-md-4 mb-3"),
+    ], className="row mx-1"),
+
+    # PARAMETER CARDS - ROW 4
+    html.Div([
+        # Current AC
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.H5("Current AC (A)", className="param-title"),
+                    html.Div(id="current-ac-circle", className="status-circle")
+                ], className="title-with-circle"),
+                html.Div([
+                    html.Div([
+                        html.Strong("kodeAlarm:", className="me-2"),
+                        html.Span(id="current-ac-alarm", children="0")
+                    ], className="d-flex justify-content-between"),
+                    html.Div([
+                        html.Strong("berita:", className="me-2"),
+                        html.Span(id="current-ac-berita", children="Normal")
+                    ], className="d-flex justify-content-between")
+                ])
+            ], className="param-card")
+        ], className="col-md-4 mb-3"),
+
+        # Power AC
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.H5("Power AC (W)", className="param-title"),
+                    html.Div(id="power-ac-circle", className="status-circle")
+                ], className="title-with-circle"),
+                html.Div([
+                    html.Div([
+                        html.Strong("kodeAlarm:", className="me-2"),
+                        html.Span(id="power-ac-alarm", children="0")
+                    ], className="d-flex justify-content-between"),
+                    html.Div([
+                        html.Strong("berita:", className="me-2"),
+                        html.Span(id="power-ac-berita", children="Normal")
+                    ], className="d-flex justify-content-between")
+                ])
+            ], className="param-card")
+        ], className="col-md-4 mb-3"),
         
         # Button Section
         html.Div([
