@@ -1,6 +1,6 @@
 # Author: Ammar Aryan Nuha
 # Deklarasi library yang digunakan
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, render_template, redirect, url_for, request, flash, session, send_file
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import dash
 import dash_bootstrap_components as dbc
@@ -39,6 +39,9 @@ import os
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
+import gspread                               
+from oauth2client.service_account import ServiceAccountCredentials 
+import io                                    
 
 # Load environment variables
 load_dotenv()
@@ -127,6 +130,43 @@ def login():
 @login_required
 def dashboard():
     return render_template('dashboard.html', user=current_user.id)
+
+# NEW FLASK ROUTE FOR DOWNLOADING THE SPREADSHEET
+@server.route('/download')
+def download_spreadsheet():
+    try:
+        # 1. Authenticate with Google Sheets using the service account
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and get all data from the first sheet
+        #    Replace "microclimate_database" with the exact name of your Google Sheet file
+        sheet = client.open("microclimate_database").sheet1
+        data = sheet.get_all_records()  # This gets data as a list of dictionaries
+
+        # 3. Convert data to a Pandas DataFrame
+        df = pd.DataFrame(data)
+
+        # 4. Create an in-memory Excel file from the DataFrame
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='SensorData')
+        output.seek(0) # Move the cursor to the beginning of the stream
+
+        # 5. Send the file to the user's browser for download
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'microclimate_data_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
+        )
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        return "Error: Spreadsheet not found. Check the name or sharing permissions.", 404
+    except Exception as e:
+        print(f"An error occurred during file download: {e}")
+        return "An internal error occurred. Please check the server logs.", 500
 
 @server.route('/logout')
 @login_required
@@ -595,7 +635,7 @@ def on_message(client, userdata, msg):
             current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
             
             # Keep only last 20 points for all data
-            if len(data[topic]) >= 20:
+            if len(data[topic]) >= 10:
                 data[topic] = data[topic][1:]
             data[topic].append(payload)
             
@@ -1358,7 +1398,7 @@ def update_rainfall_dashboard(n):
         empty_rainfall_fig = go.Figure(layout=dict(
             title="Rainfall Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="Rainfall (mm)", range=[0, 100]),
+            yaxis=dict(title="Rainfall (mm)", range=[0, 70]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=300,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
@@ -1412,7 +1452,7 @@ def update_rainfall_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="Rainfall (mm)", range=[0, 100]),
+                    yaxis=dict(title="Rainfall (mm)", range=[0, 70]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=300,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -1431,7 +1471,7 @@ def update_rainfall_dashboard(n):
                 rainfall_fig.update_layout(
                     title="Rainfall Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="Rainfall (mm)", range=[0, 100]),
+                    yaxis=dict(title="Rainfall (mm)", range=[0, 70]),
                     height=300,
                     showlegend=False
                 )
@@ -1479,7 +1519,7 @@ def update_co2_dashboard(n):
         co2_fig = go.Figure(layout=dict(
             title="CO2 Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="CO2 (PPM)", range=[300, 10000]),
+            yaxis=dict(title="CO2 (PPM)", range=[300, 3000]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=300,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
@@ -1534,7 +1574,7 @@ def update_co2_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="CO2 (PPM)", range=[300, 10000]),
+                    yaxis=dict(title="CO2 (PPM)", range=[300, 3000]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=300,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -1553,7 +1593,7 @@ def update_co2_dashboard(n):
                 co2_fig.update_layout(
                     title="CO2 Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="CO2 (PPM)", range=[300, 10000]),
+                    yaxis=dict(title="CO2 (PPM)", range=[300, 3000]),
                     height=300,
                     showlegend=False
                 )
