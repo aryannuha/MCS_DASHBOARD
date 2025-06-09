@@ -1,3 +1,16 @@
+''' 
+ Nama File      : gps.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+    1. Membuat layout untuk halaman GPS Dashboard
+    2. Menggunakan komponen Dash dan Bootstrap untuk tata letak yang responsif
+    3. Menyediakan peta interaktif dengan data GPS
+    4. Menampilkan informasi lokasi dan koordinat saat ini
+    5. Menyediakan tombol navigasi untuk halaman lain
+    6. Menggunakan interval untuk pembaruan data secara berkala
+'''
+
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
 

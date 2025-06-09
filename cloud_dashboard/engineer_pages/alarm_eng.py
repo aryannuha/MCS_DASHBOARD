@@ -1,3 +1,15 @@
+''' 
+ Nama File      : alarm_eng.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+    1. Membuat layout untuk halaman Alarm Dashboard
+    2. Menggunakan komponen Dash dan Bootstrap untuk tata letak yang responsif
+    3. Menyediakan parameter sensor dalam bentuk kartu
+    4. Menyediakan tombol navigasi untuk halaman lain
+    5. Menggunakan interval untuk pembaruan data secara berkala
+'''
+
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
 

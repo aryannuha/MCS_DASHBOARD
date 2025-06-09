@@ -1,3 +1,15 @@
+''' 
+ Nama File      : par.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+    1. Membuat layout untuk halaman PAR Dashboard
+    2. Menggunakan komponen Dash dan Bootstrap untuk tata letak yang responsif
+    3. Menyediakan grafik real-time, prediksi, dan tabel historis
+    4. Menyediakan tombol navigasi untuk halaman lain
+    5. Menggunakan interval untuk pembaruan data secara berkala
+'''
+
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
 
@@ -70,14 +82,17 @@ par_layout = html.Div([
                     dash_table.DataTable(
                         id='historical-table-par',
                         columns=[
-                            {"name": "Time (h)", "id": "time"},
+                            {"name": "Time (m)", "id": "time"},
                             {"name": "PAR (μmol/m²/s)", "id": "par-historical"},
                         ],
                         data=[
                             # Empty rows for demonstration
                             {} for _ in range(2)
                         ],
-                        style_table={'overflowX': 'auto'},
+                        style_table={'overflowX': 'auto',    # Horizontal scrolling if needed
+                            'overflowY': 'auto',    # Enable vertical scrolling
+                            'height': '102px'       # Increased height for better visibility
+                        },
                         style_cell={'textAlign': 'center', 'padding': '5px'},
                         style_header={
                             'backgroundColor': '#f8f9fa',
@@ -120,5 +135,5 @@ par_layout = html.Div([
     ], className="footer-section"),
     
     # Keep the interval component for data updates
-    dcc.Interval(id='interval_par', interval=1200, n_intervals=0)
+    dcc.Interval(id='interval_par', interval=3000, n_intervals=0)
 ])

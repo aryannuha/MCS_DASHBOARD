@@ -1,4 +1,11 @@
-# pages/main_dashboard.py
+''' 
+ Nama File      : mcs_dashboard_all.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+   1. Membuat layout utama untuk dashboard sistem mikroklimat.
+   2. Menggunakan komponen Dash dan Bootstrap untuk tata letak yang responsif.
+'''
 
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
@@ -99,14 +106,15 @@ main_dashboard_layout = html.Div([
                         columns=[
                             {"name": i, "id": i} for i in [
                                 "Time", "Temp In (°C)", "Humidity In (%)", "Temp Out (°C)", "Humidity Out (%)", 
-                                "PAR (μmol/m²/s)", "CO2 (PPM)", "Windspeed (m/s)", "Rainfall (mm)"
+                                "PAR (μmol/m²/s)", "CO2 (PPM)", "Windspeed (m/s)", "Rainfall (mm)",
+                                "Voltage AC (V)", "Current AC (A)", "Power AC (W)"
                             ]
                         ],
                         data=[],
                         style_table={
                             'overflowX': 'auto',    # Horizontal scrolling if needed
                             'overflowY': 'auto',    # Enable vertical scrolling
-                            'height': '200px'       # Increased height for better visibility
+                            'height': '220px'       # Increased height for better visibility
                         },
                         style_cell={"textAlign": "center"},
                         style_data_conditional=[

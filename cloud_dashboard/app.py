@@ -1,4 +1,31 @@
-# Author: Ammar Aryan Nuha
+''' 
+ Nama File      : app.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+   1. Program baca data dari MQTT broker, 
+      kemudian tampilkan pada halaman web dashboard,
+      dengan beberapa fitur seperti: 
+        - Tampilan data real-time
+        - Tampilan data historis
+        - Tampilan data prediksi
+    2. Program ini juga menyediakan halaman engineer untuk
+        - Melihat data historis
+        - Melihat data prediksi
+        - Mengunduh data historis dalam format Excel
+    3. Program ini menggunakan Flask sebagai web framework,
+        Dash untuk visualisasi data, 
+        dan Paho MQTT untuk komunikasi dengan broker MQTT.
+    4. Program ini juga menggunakan Google Sheets untuk menyimpan data historis
+        dan mengunduhnya dalam format Excel. 
+    5. Program ini juga menyediakan halaman login untuk engineer
+    6. Program ini juga menyediakan halaman GPS untuk melihat lokasi perangkat
+    7. Program ini juga menyediakan halaman alarm untuk melihat status alarm
+    8. Program ini juga menyediakan halaman CO2, T&H Indoor, T&H Outdoor, PAR, Windspeed, Rainfall
+    9. Program ini juga menyediakan halaman multipage untuk engineer
+    10. Program ini juga menyediakan halaman multipage untuk guest    
+'''
+
 # Deklarasi library yang digunakan
 from flask import Flask, render_template, redirect, url_for, request, flash, session, send_file
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -202,7 +229,10 @@ DEFAULT_VALUES = {
     'kodeData0511': "-",
     'kodeData0611': "-",
     'kodeData1011': "-",
-    'kodeData1012': "-"
+    'kodeData1012': "-",
+    'kodeData0911': "-",
+    'kodeData0912': "-",
+    'kodeData0913': "-",
 }
 
 # Default values for alarms
@@ -289,7 +319,10 @@ data = {
     'kodeData0511': [],    # Rainfall values
     'kodeData0611': [],    # PAR values
     'kodeData1011': [],   # Latitude values
-    'kodeData1012': []    # Longitude values
+    'kodeData1012': [],    # Longitude values
+    'kodeData0911': [], # Voltage AC values
+    'kodeData0912': [], # Current AC values
+    'kodeData0913': [], # Power AC values
 }
 
 # Alarm data storage
@@ -459,6 +492,9 @@ TOPIC_RAINFALL = "mcs/kodeData0511"
 TOPIC_PAR = "mcs/kodeData0611"
 TOPIC_LAT = "mcs/kodeData1011"
 TOPIC_LON = "mcs/kodeData1012"
+TOPIC_VOLTAGE_AC = "mcs/kodeData0911"
+TOPIC_CURRENT_AC = "mcs/kodeData0912"
+TOPIC_POWER_AC = "mcs/kodeData0913"
 
 # TOPIC FOR ALARM
 TOPIC_ALARM_SUHU_IN = "mcs/kodeAlarm0211"
@@ -626,27 +662,45 @@ def on_message(client, userdata, msg):
         connection_status['connected'] = True
         
         topic = msg.topic.split('/')[-1]  # Get the last part of the topic
+
+        # Define a consistent history length
+        MAX_HISTORY = 10
+
+        # List of topics that appear in the real-time table
+        table_data_topics = [
+            'kodeData0211', 'kodeData0212', 'kodeData0711', 'kodeData0712',
+            'kodeData0311', 'kodeData0411', 'kodeData0511', 'kodeData0611',
+            'kodeData1011', 'kodeData1012', 'kodeData0911', 'kodeData0912', 
+            'kodeData0913'
+        ]
+
+        # Topics to round to 2 decimal places
+        topics_to_round = [
+            'kodeData0211', 'kodeData0212', 'kodeData0711', 'kodeData0712',
+            'kodeData0311', 'kodeData0411', 'kodeData0511', 'kodeData0611',
+            'kodeData0911', 'kodeData0912', 'kodeData0913'
+        ]
         
         # Process regular data topics
-        if topic in ['kodeData0000', 'kodeData0211', 'kodeData0212', 'kodeData0711', 'kodeData0712',
-                    'kodeData0311', 'kodeData0411', 'kodeData0511', 'kodeData0611',
-                    'kodeData1011', 'kodeData1012']:
-            payload = float(msg.payload.decode())
+        if topic == 'kodeData0000':
+            raw_payload = float(msg.payload.decode())
+            payload = round(raw_payload, 2) if topic in topics_to_round else raw_payload
+            
             current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
+            data['waktu'].append(current_time)
+            data[topic].append(payload) # Use the potentially rounded payload
+
+            for key in table_data_topics:
+                last_value = data[key][-1] if data[key] else None
+                data[key].append(last_value)
+
+        # Other data topics: These UPDATE the last row
+        elif topic in table_data_topics:
+            raw_payload = float(msg.payload.decode())
+            payload = round(raw_payload, 2) if topic in topics_to_round else raw_payload
             
-            # Keep only last 20 points for all data
-            if len(data[topic]) >= 10:
-                data[topic] = data[topic][1:]
-            data[topic].append(payload)
-            
-            # FIXED: Update waktu
-            if topic == 'kodeData0000':
-                if len(data['waktu']) >= 20:
-                    data['waktu'] = data['waktu'][1:]
-                data['waktu'].append(current_time)
-            
-            # Print for debugging
-            print(f"Updated {topic}: {payload} at {current_time}")
+            if data[topic]:
+                data[topic][-1] = payload # Use the rounded payload
         
         # Process alarm code topics
         elif topic.startswith('kodeAlarm'):
@@ -681,6 +735,11 @@ def on_message(client, userdata, msg):
                 print(f"Updated prediction {topic}: {predict_value}")
             except ValueError:
                 print(f"Error parsing prediction value for {topic}: {msg.payload.decode()}")
+
+        # Trim all historical lists at the end
+        for key in data.keys():
+            if len(data[key]) > MAX_HISTORY:
+                data[key] = data[key][-MAX_HISTORY:]
 
     except Exception as e:
         print(f"Error processing MQTT message: {e}")
@@ -870,7 +929,7 @@ def update_th_in_dashboard(n):
         empty_humid_fig = go.Figure(layout=dict(
             title="Humidity Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="Humidity (%)", range=[40, 100]),
+            yaxis=dict(title="Humidity (%)", range=[0, 100]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=150,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
@@ -1000,7 +1059,7 @@ def update_th_in_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=150,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -1019,7 +1078,7 @@ def update_th_in_dashboard(n):
                 humid_fig.update_layout(
                     title="Humidity Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     height=150,
                     showlegend=False
                 )
@@ -1080,7 +1139,7 @@ def update_th_out_dashboard(n):
         empty_humid_fig = go.Figure(layout=dict(
             title="Humidity Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="Humidity (%)", range=[40, 100]),
+            yaxis=dict(title="Humidity (%)", range=[0, 100]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=150,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
@@ -1210,7 +1269,7 @@ def update_th_out_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=150,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -1229,7 +1288,7 @@ def update_th_out_dashboard(n):
                 humid_fig.update_layout(
                     title="Humidity Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     height=150,
                     showlegend=False
                 )
@@ -1519,7 +1578,7 @@ def update_co2_dashboard(n):
         co2_fig = go.Figure(layout=dict(
             title="CO2 Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="CO2 (PPM)", range=[300, 3000]),
+            yaxis=dict(title="CO2 (PPM)", range=[0, 2000]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=300,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
@@ -1574,7 +1633,7 @@ def update_co2_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="CO2 (PPM)", range=[300, 3000]),
+                    yaxis=dict(title="CO2 (PPM)", range=[0, 2000]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=300,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -1593,7 +1652,7 @@ def update_co2_dashboard(n):
                 co2_fig.update_layout(
                     title="CO2 Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="CO2 (PPM)", range=[300, 3000]),
+                    yaxis=dict(title="CO2 (PPM)", range=[0, 2000]),
                     height=300,
                     showlegend=False
                 )
@@ -1789,7 +1848,16 @@ def update_realtime_table(n_intervals):
                     ),
                     "Rainfall (mm)": safe_float_convert(
                         data['kodeData0511'][i] if i < len(data['kodeData0511']) else None
-                    )
+                    ),
+                    "Voltage AC (V)": safe_float_convert(
+                        data['kodeData0911'][i] if i < len(data['kodeData0911']) else None
+                    ),
+                    "Current AC (A)": safe_float_convert(
+                        data['kodeData0912'][i] if i < len(data['kodeData0912']) else None
+                    ),
+                    "Power AC (W)": safe_float_convert(
+                        data['kodeData0913'][i] if i < len(data['kodeData0913']) else None
+                    ),
                 }
                 table_data.append(table_row)
             except (IndexError, ValueError) as e:
@@ -2036,7 +2104,7 @@ def update_alarm_values(n):
      Output('humidity-prediction-graph', 'figure')],
     [Input('interval_thin', 'n_intervals')]
 )
-def update_prediction_graphs(n):
+def update_th_in_prediction_graphs(n):
 # Temperature prediction graph
     temp_fig = go.Figure()
     
@@ -2252,7 +2320,7 @@ def update_prediction_graphs(n):
      Output('humidity-prediction-out-graph', 'figure')],
     [Input('interval_thout', 'n_intervals')]
 )
-def update_prediction_graphs(n):
+def update_th_out_prediction_graphs(n):
     # Temperature prediction graph
     temp_fig = go.Figure()
     
@@ -2466,7 +2534,7 @@ def update_prediction_graphs(n):
     Output('co2-prediction-graph', 'figure'),
     [Input('interval_co2', 'n_intervals')]
 )
-def update_prediction_graphs(n):
+def update_co2_prediction_graphs(n):
     # Temperature prediction graph
     co2_fig = go.Figure()
     
@@ -2577,7 +2645,7 @@ def update_prediction_graphs(n):
     Output('par-prediction-graph', 'figure'),
     [Input('interval_par', 'n_intervals')]
 )
-def update_prediction_graphs(n):
+def update_par_prediction_graphs(n):
     # Temperature prediction graph
     par_fig = go.Figure()
     
@@ -2688,7 +2756,7 @@ def update_prediction_graphs(n):
     Output('windspeed-prediction-graph', 'figure'),
     [Input('interval_windspeed', 'n_intervals')]
 )
-def update_prediction_graphs(n):
+def update_windspeed_prediction_graphs(n):
     # Temperature prediction graph
     windspeed_fig = go.Figure()
     
@@ -2799,7 +2867,7 @@ def update_prediction_graphs(n):
     Output('rainfall-prediction-graph', 'figure'),
     [Input('interval_rainfall', 'n_intervals')]
 )
-def update_prediction_graphs(n):
+def update_rainfall_prediction_graphs(n):
     # Temperature prediction graph
     rainfall_fig = go.Figure()
     
@@ -2905,6 +2973,296 @@ def update_prediction_graphs(n):
     
     return rainfall_fig
 
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN th_in.py
+@app_dash.callback(
+    Output('historical-table-th-in', 'data'),
+    Input('interval_thin', 'n_intervals')
+)
+def update_th_in_historical_table(n):
+    try:
+        # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and select the first sheet
+        sheet = client.open("microclimate_database").sheet1
+
+        # 3. Get all data, excluding the header row
+        records = sheet.get_all_records()
+        
+        # 4. If there's no data, return an empty list
+        if not records:
+            return []
+
+        # 5. Get the last 20 records for display and reverse them to show the latest on top
+        latest_records = records[-20:]
+        latest_records.reverse()
+
+        # 6. Format the data to match the DataTable column IDs
+        #    Spreadsheet columns: 'Time', 'Temp In', 'Humid In'
+        #    DataTable columns: 'time', 'temperature_in_historical', 'humidity_in_historical'
+        table_data = []
+        for row in latest_records:
+            # Extract only the time part (e.g., '21:00') from the full datetime string
+            time_value = str(row.get('Time', ''))
+
+            table_data.append({
+                'time': time_value,
+                'temperature_in_historical': row.get('Temp In'),
+                'humidity_in_historical': row.get('Humid In')
+            })
+            
+        return table_data
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("Error: Spreadsheet 'microclimate_database' not found. Check the name and sharing permissions.")
+        return [] # Return empty data to prevent the app from crashing
+    except Exception as e:
+        print(f"An error occurred while updating the historical table: {e}")
+        return [] # Return empty data on any other error
+
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN th_out.py
+@app_dash.callback(
+    Output('historical-table-th-out', 'data'),
+    Input('interval_thout', 'n_intervals')
+)
+def update_th_out_historical_table(n):
+    try:
+        # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and select the first sheet
+        sheet = client.open("microclimate_database").sheet1
+
+        # 3. Get all data, excluding the header row
+        records = sheet.get_all_records()
+        
+        # 4. If there's no data, return an empty list
+        if not records:
+            return []
+
+        # 5. Get the last 20 records for display and reverse them to show the latest on top
+        latest_records = records[-20:]
+        latest_records.reverse()
+
+        # 6. Format the data to match the DataTable column IDs
+        #    Spreadsheet columns: 'Time', 'Temp In', 'Humid In'
+        #    DataTable columns: 'time', 'temperature_in_historical', 'humidity_in_historical'
+        table_data = []
+        for row in latest_records:
+            # Extract only the time part (e.g., '21:00') from the full datetime string
+            time_value = str(row.get('Time', ''))
+
+            table_data.append({
+                'time': time_value,
+                'temperature_out_historical': row.get('Temp Out'),
+                'humidity_out_historical': row.get('Humid Out')
+            })
+            
+        return table_data
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("Error: Spreadsheet 'microclimate_database' not found. Check the name and sharing permissions.")
+        return [] # Return empty data to prevent the app from crashing
+    except Exception as e:
+        print(f"An error occurred while updating the historical table: {e}")
+        return [] # Return empty data on any other error
+    
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN par.py
+@app_dash.callback(
+    Output('historical-table-par', 'data'),
+    Input('interval_par', 'n_intervals')
+)
+def update_par_historical_table(n):
+    try:
+        # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and select the first sheet
+        sheet = client.open("microclimate_database").sheet1
+
+        # 3. Get all data, excluding the header row
+        records = sheet.get_all_records()
+        
+        # 4. If there's no data, return an empty list
+        if not records:
+            return []
+
+        # 5. Get the last 20 records for display and reverse them to show the latest on top
+        latest_records = records[-20:]
+        latest_records.reverse()
+
+        # 6. Format the data to match the DataTable column IDs
+        #    Spreadsheet columns: 'Time', 'Temp In', 'Humid In'
+        #    DataTable columns: 'time', 'temperature_in_historical', 'humidity_in_historical'
+        table_data = []
+        for row in latest_records:
+            # Extract only the time part (e.g., '21:00') from the full datetime string
+            time_value = str(row.get('Time', ''))
+
+            table_data.append({
+                'time': time_value,
+                'par-historical': row.get('PAR'),
+            })
+            
+        return table_data
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("Error: Spreadsheet 'microclimate_database' not found. Check the name and sharing permissions.")
+        return [] # Return empty data to prevent the app from crashing
+    except Exception as e:
+        print(f"An error occurred while updating the historical table: {e}")
+        return [] # Return empty data on any other error
+    
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN rainfall.py
+@app_dash.callback(
+    Output('historical-table-rainfall', 'data'),
+    Input('interval_rainfall', 'n_intervals')
+)
+def update_rainfall_historical_table(n):
+    try:
+        # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and select the first sheet
+        sheet = client.open("microclimate_database").sheet1
+
+        # 3. Get all data, excluding the header row
+        records = sheet.get_all_records()
+        
+        # 4. If there's no data, return an empty list
+        if not records:
+            return []
+
+        # 5. Get the last 20 records for display and reverse them to show the latest on top
+        latest_records = records[-20:]
+        latest_records.reverse()
+
+        # 6. Format the data to match the DataTable column IDs
+        #    Spreadsheet columns: 'Time', 'Temp In', 'Humid In'
+        #    DataTable columns: 'time', 'temperature_in_historical', 'humidity_in_historical'
+        table_data = []
+        for row in latest_records:
+            # Extract only the time part (e.g., '21:00') from the full datetime string
+            time_value = str(row.get('Time', ''))
+
+            table_data.append({
+                'time': time_value,
+                'rainfall-historical': row.get('Rainfall'),
+            })
+            
+        return table_data
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("Error: Spreadsheet 'microclimate_database' not found. Check the name and sharing permissions.")
+        return [] # Return empty data to prevent the app from crashing
+    except Exception as e:
+        print(f"An error occurred while updating the historical table: {e}")
+        return [] # Return empty data on any other error
+
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN windspeed.py
+@app_dash.callback(
+    Output('historical-table-windspeed', 'data'),
+    Input('interval_windspeed', 'n_intervals')
+)
+def update_windspeed_historical_table(n):
+    try:
+        # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and select the first sheet
+        sheet = client.open("microclimate_database").sheet1
+
+        # 3. Get all data, excluding the header row
+        records = sheet.get_all_records()
+        
+        # 4. If there's no data, return an empty list
+        if not records:
+            return []
+
+        # 5. Get the last 20 records for display and reverse them to show the latest on top
+        latest_records = records[-20:]
+        latest_records.reverse()
+
+        # 6. Format the data to match the DataTable column IDs
+        #    Spreadsheet columns: 'Time', 'Temp In', 'Humid In'
+        #    DataTable columns: 'time', 'temperature_in_historical', 'humidity_in_historical'
+        table_data = []
+        for row in latest_records:
+            # Extract only the time part (e.g., '21:00') from the full datetime string
+            time_value = str(row.get('Time', ''))
+
+            table_data.append({
+                'time': time_value,
+                'windspeed-historical': row.get('Windspeed'),
+            })
+            
+        return table_data
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("Error: Spreadsheet 'microclimate_database' not found. Check the name and sharing permissions.")
+        return [] # Return empty data to prevent the app from crashing
+    except Exception as e:
+        print(f"An error occurred while updating the historical table: {e}")
+        return [] # Return empty data on any other error
+
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN co2.py
+@app_dash.callback(
+    Output('historical-table-co2', 'data'),
+    Input('interval_co2', 'n_intervals')
+)
+def update_co2_historical_table(n):
+    try:
+        # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and select the first sheet
+        sheet = client.open("microclimate_database").sheet1
+
+        # 3. Get all data, excluding the header row
+        records = sheet.get_all_records()
+        
+        # 4. If there's no data, return an empty list
+        if not records:
+            return []
+
+        # 5. Get the last 20 records for display and reverse them to show the latest on top
+        latest_records = records[-20:]
+        latest_records.reverse()
+
+        # 6. Format the data to match the DataTable column IDs
+        #    Spreadsheet columns: 'Time', 'Temp In', 'Humid In'
+        #    DataTable columns: 'time', 'temperature_in_historical', 'humidity_in_historical'
+        table_data = []
+        for row in latest_records:
+            # Extract only the time part (e.g., '21:00') from the full datetime string
+            time_value = str(row.get('Time', ''))
+
+            table_data.append({
+                'time': time_value,
+                'co2-historical': row.get('CO2'),
+            })
+            
+        return table_data
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("Error: Spreadsheet 'microclimate_database' not found. Check the name and sharing permissions.")
+        return [] # Return empty data to prevent the app from crashing
+    except Exception as e:
+        print(f"An error occurred while updating the historical table: {e}")
+        return [] # Return empty data on any other error
+    
 # Run server
 if __name__ == '__main__':
     server.run(server.run(host='0.0.0.0', port=5000))
