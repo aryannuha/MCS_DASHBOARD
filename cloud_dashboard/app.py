@@ -606,6 +606,7 @@ def on_connect(client, userdata, flags, rc):
                           (TOPIC_CO2, 0), (TOPIC_WINDSPEED, 0), 
                           (TOPIC_RAINFALL, 0), (TOPIC_PAR, 0),
                           (TOPIC_LAT, 0),  (TOPIC_LON, 0),
+                          (TOPIC_VOLTAGE_AC, 0), (TOPIC_CURRENT_AC, 0), (TOPIC_POWER_AC, 0),
                           (TOPIC_ALARM_SUHU_IN, 0), (TOPIC_ALARM_KELEMBABAN_IN, 0),
                           (TOPIC_ALARM_SUHU_OUT, 0), (TOPIC_ALARM_KELEMBABAN_OUT, 0),
                           (TOPIC_ALARM_CO2, 0), (TOPIC_ALARM_WINDSPEED, 0),
