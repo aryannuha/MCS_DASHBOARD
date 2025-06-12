@@ -1,3 +1,16 @@
+''' 
+ Nama File      : gps.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+    1. Membuat layout untuk halaman GPS Dashboard
+    2. Menggunakan komponen Dash dan Bootstrap untuk tata letak yang responsif
+    3. Menyediakan peta interaktif dengan data GPS
+    4. Menampilkan informasi lokasi dan koordinat saat ini
+    5. Menyediakan tombol navigasi untuk halaman lain
+    6. Menggunakan interval untuk pembaruan data secara berkala
+'''
+
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
 
@@ -5,6 +18,12 @@ import dash_bootstrap_components as dbc
 gps_layout = html.Div([
     # NAVBAR
     html.Div([
+        html.Div(html.Img(src="/static/img/lpdp.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/diktisaintekdan.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/ipb.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polsub.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polindra.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polban.png", className="navbar-logo")),
         html.Div("GPS DASHBOARD", className="navbar-title"),
         dcc.Link(html.Img(src="/static/icon/gps.svg", className="gps-icon me-2"), href="/dash/gps"),
         dcc.Link(html.Img(src="/static/icon/notification.svg", className="notification-icon"), href="/dash/alarm"),
@@ -77,6 +96,17 @@ gps_layout = html.Div([
             dcc.Location(id="login-redirect", refresh=True)  # Handles redirection
         ], className="d-flex flex-wrap justify-content-end mb-4")
     ], className="container"),
+
+    # FOOTER
+    html.Footer([
+        html.Div([
+            html.P([
+                "© Ammar Aryan Nuha 221311008 • Created with ",
+                html.Span("♥", className="love-symbol"),
+                " for Microclimate System"
+            ], className="footer-text mb-0")
+        ], className="container text-center")
+    ], className="footer-section"),
     
     dcc.Interval(id='interval_gps', interval=1200, n_intervals=0)
-], className="dashboard-container")
+])

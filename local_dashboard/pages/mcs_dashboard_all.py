@@ -1,4 +1,11 @@
-# pages/main_dashboard.py
+''' 
+ Nama File      : mcs_dashboard_all.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+   1. Membuat layout utama untuk dashboard sistem mikroklimat.
+   2. Menggunakan komponen Dash dan Bootstrap untuk tata letak yang responsif.
+'''
 
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
@@ -6,6 +13,12 @@ import dash_bootstrap_components as dbc
 main_dashboard_layout = html.Div([
     # NAVBAR
     html.Div([
+        html.Div(html.Img(src="/static/img/lpdp.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/diktisaintekdan.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/ipb.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polsub.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polindra.png", className="navbar-logo")),
+        html.Div(html.Img(src="/static/img/polban.png", className="navbar-logo")),
         html.Div("MICROCLIMATE SYSTEM DASHBOARD", className="navbar-title"),
         dcc.Link(html.Img(src="/static/icon/gps.svg", className="gps-icon me-2"), href="/dash/gps"),
         dcc.Link(html.Img(src="/static/icon/notification.svg", className="notification-icon"), href="/dash/alarm"),
@@ -93,14 +106,15 @@ main_dashboard_layout = html.Div([
                         columns=[
                             {"name": i, "id": i} for i in [
                                 "Time", "Temp In (°C)", "Humidity In (%)", "Temp Out (°C)", "Humidity Out (%)", 
-                                "PAR (μmol/m²/s)", "CO2 (PPM)", "Windspeed (m/s)", "Rainfall (mm)"
+                                "PAR (μmol/m²/s)", "CO2 (PPM)", "Windspeed (m/s)", "Rainfall (mm)",
+                                "Voltage AC (V)", "Current AC (A)", "Power AC (W)"
                             ]
                         ],
                         data=[],
                         style_table={
                             'overflowX': 'auto',    # Horizontal scrolling if needed
                             'overflowY': 'auto',    # Enable vertical scrolling
-                            'height': '200px'       # Increased height for better visibility
+                            'height': '220px'       # Increased height for better visibility
                         },
                         style_cell={"textAlign": "center"},
                         style_data_conditional=[
@@ -130,6 +144,17 @@ main_dashboard_layout = html.Div([
             ], width=6)
         ], className="g-2")
     ], className="container mb-5"),
+
+    # FOOTER
+    html.Footer([
+        html.Div([
+            html.P([
+                "© Ammar Aryan Nuha 221311008 • Created with ",
+                html.Span("♥", className="love-symbol"),
+                " for Microclimate System"
+            ], className="footer-text mb-0")
+        ], className="container text-center")
+    ], className="footer-section"),
 
     dcc.Interval(id='interval_mcs', interval=1200, n_intervals=0)
 ])

@@ -305,7 +305,6 @@ DEFAULT_PREDICTION_VALUES = {
     'kodeData0616': "-",
 }
 
-
 # data storage
 data = {
     'waktu': [],      # Time values

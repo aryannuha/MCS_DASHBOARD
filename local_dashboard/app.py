@@ -1,6 +1,33 @@
-# Author: Ammar Aryan Nuha
+''' 
+ Nama File      : app.py
+ Tanggal Update : 09 Juni 2025
+ Dibuat oleh    : Ammar Aryan Nuha
+ Penjelasan     : 
+   1. Program baca data dari MQTT broker, 
+      kemudian tampilkan pada halaman web dashboard,
+      dengan beberapa fitur seperti: 
+        - Tampilan data real-time
+        - Tampilan data historis
+        - Tampilan data prediksi
+    2. Program ini juga menyediakan halaman engineer untuk
+        - Melihat data historis
+        - Melihat data prediksi
+        - Mengunduh data historis dalam format Excel
+    3. Program ini menggunakan Flask sebagai web framework,
+        Dash untuk visualisasi data, 
+        dan Paho MQTT untuk komunikasi dengan broker MQTT.
+    4. Program ini juga menggunakan Google Sheets untuk menyimpan data historis
+        dan mengunduhnya dalam format Excel. 
+    5. Program ini juga menyediakan halaman login untuk engineer
+    6. Program ini juga menyediakan halaman GPS untuk melihat lokasi perangkat
+    7. Program ini juga menyediakan halaman alarm untuk melihat status alarm
+    8. Program ini juga menyediakan halaman CO2, T&H Indoor, T&H Outdoor, PAR, Windspeed, Rainfall
+    9. Program ini juga menyediakan halaman multipage untuk engineer
+    10. Program ini juga menyediakan halaman multipage untuk guest    
+'''
+
 # Deklarasi library yang digunakan
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, render_template, redirect, url_for, request, flash, session, send_file
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import dash
 import dash_bootstrap_components as dbc
@@ -14,7 +41,7 @@ import random
 import pandas as pd
 import numpy as np
 from scipy import interpolate
-from datetime import datetime
+from datetime import datetime, timedelta
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from pages.mcs_dashboard_all import main_dashboard_layout, main_dashboard_path
@@ -35,10 +62,23 @@ from engineer_pages.windspeed_eng import engineer_windspeed_layout
 from engineer_pages.rainfall_eng import engineer_rainfall_layout  
 from engineer_pages.alarm_eng import engineer_alarm_layout  
 from engineer_pages.gps_eng import engineer_gps_layout  
+import os
+import time
+from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+import gspread                               
+from oauth2client.service_account import ServiceAccountCredentials 
+import io                            
+import requests
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app
 server = Flask(__name__)
-server.secret_key = secrets.token_hex(32)  # Generates a 64-character hexadecimal key
+
+# UPDATED: Secure secret key from environment
+server.secret_key = os.getenv('SECRET_KEY', '9f9f9f9f9f9f9f9f9f9f9f9f9f9f9')  # Use a strong secret key
 
 # Menyimpan daftar halaman multipage
 pages = {
@@ -70,8 +110,12 @@ login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = 'login'  # Specify the login route
 
-# User data for simplicity (use a database in production)
-users = {'engineer': {'password': 'engineer'}}
+# UPDATED: Secure user data with hashed passwords
+users = {
+    'engineer': {
+        'password_hash': generate_password_hash(os.getenv('ENGINEER_PASSWORD', 'password'))
+    }
+}
 
 class User(UserMixin):
     def __init__(self, id):
@@ -87,17 +131,24 @@ def home():
     # Public home page, redirects to guest dashboard
     return redirect('/dash/')
 
+# UPDATED: Secure login route with password hashing
 @server.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username in users and users[username]['password'] == password:
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        # Input validation
+        if not username or not password:
+            flash('Username and password are required')
+            return redirect(url_for('login'))
+        
+        # Check if user exists and password is correct
+        if username in users and check_password_hash(users[username]['password_hash'], password):
             user = User(username)
             login_user(user)
             return redirect(url_for('dashboard'))
         
-        # Tambahkan flash & redirect untuk POST-REDIRECT-GET
         flash('Invalid credentials')
         return redirect(url_for('login'))
 
@@ -116,47 +167,253 @@ def logout():
 # end of flask route
 
 # Integrate Dash app
-app_dash = dash.Dash(__name__, server=server, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP], title='MCS Dashboard', suppress_callback_exceptions=True)
+app_dash = dash.Dash(__name__, server=server, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP], title='MCS Dashboard', suppress_callback_exceptions=True, assets_folder='assets', update_title=False)
  
 @app_dash.server.before_request
 def restrict_dash_pages():
     if request.path.startswith('/dash/engineer') and not session.get('_user_id'):
         return redirect(url_for('login'))
 
+# NEW: Connection monitoring variables
+connection_status = {
+    'connected': False,
+    'last_message_time': None,
+    'connection_timeout': 80  # seconds - consider disconnected if no message for 60 seconds
+}
+
+# NEW: Default values for sensors
+DEFAULT_VALUES = {
+    'kodeData0000': "-",  # Cycle start signal
+    'kodeData0211': "-",
+    'kodeData0212': "-",
+    'kodeData0711': "-",
+    'kodeData0712': "-",
+    'kodeData0311': "-",
+    'kodeData0411': "-",
+    'kodeData0511': "-",
+    'kodeData0611': "-",
+    'kodeData1011': "-",
+    'kodeData1012': "-",
+    'kodeData0911': "-",
+    'kodeData0912': "-",
+    'kodeData0913': "-",
+}
+
+# Default values for alarms
+DEFAULT_ALARM_VALUES = {
+    'kodeAlarm0211': 5,
+    'kodeAlarm0212': 5,
+    'kodeAlarm0711': 5,
+    'kodeAlarm0712': 5,
+    'kodeAlarm0311': 5,
+    'kodeAlarm0411': 5,
+    'kodeAlarm0511': 5,
+    'kodeAlarm0611': 5,
+    'kodeAlarm0911': 5,
+    'kodeAlarm0912': 5,
+    'kodeAlarm0913': 5,
+    'berita0211': 'N/A',
+    'berita0212': 'N/A',
+    'berita0711': 'N/A',
+    'berita0712': 'N/A',
+    'berita0311': 'N/A',
+    'berita0411': 'N/A',
+    'berita0511': 'N/A',
+    'berita0611': 'N/A',
+    'berita0911': 'N/A',
+    'berita0912': 'N/A',
+    'berita0913': 'N/A',
+}
+
+# Default values for predicitons
+DEFAULT_PREDICTION_VALUES = {
+    'kodeData0213': "-",
+    'kodeData0214': "-",
+    'kodeData0215': "-",
+    'kodeData0216': "-",
+    'kodeData0217': "-",
+    'kodeData0218': "-",
+    'kodeData0219': "-",
+    'kodeData0220': "-",
+    'kodeData0221': "-",
+    'kodeData0222': "-",
+    'kodeData0713': "-",
+    'kodeData0714': "-",
+    'kodeData0715': "-",
+    'kodeData0716': "-",
+    'kodeData0717': "-",
+    'kodeData0718': "-",
+    'kodeData0719': "-",
+    'kodeData0720': "-",
+    'kodeData0721': "-",
+    'kodeData0722': "-",
+    'kodeData0312': "-",
+    'kodeData0313': "-",
+    'kodeData0314': "-",
+    'kodeData0315': "-",
+    'kodeData0316': "-",
+    'kodeData0412': "-",
+    'kodeData0413': "-",
+    'kodeData0414': "-",
+    'kodeData0415': "-",
+    'kodeData0416': "-",
+    'kodeData0512': "-",
+    'kodeData0513': "-",
+    'kodeData0514': "-",
+    'kodeData0515': "-",
+    'kodeData0516': "-",
+    'kodeData0612': "-",
+    'kodeData0613': "-",
+    'kodeData0614': "-",
+    'kodeData0615': "-",
+    'kodeData0616': "-",
+}
+
 # data storage
 data = {
     'waktu': [],      # Time values
-    'kodeDataSuhuIn': [],       # Temperature values 
-    'kodeDataKelembabanIn': [], # Humidity values
-    'kodeDataSuhuOut': [],   # Outdoor temperature values
-    'kodeDataKelembabanOut': [], # Outdoor humidity values
-    'kodeDataCo2': [],        # CO2 values
-    'kodeDataWindspeed': [],  # Wind speed values
-    'kodeDataRainfall': [],    # Rainfall values
-    'kodeDataPar': [],    # PAR values
-    'kodeDataLat': [],   # Latitude values
-    'kodeDataLon': []    # Longitude values
+    'kodeData0000': [],  # Cycle start signal
+    'kodeData0211': [],       # Temperature values 
+    'kodeData0212': [], # Humidity values
+    'kodeData0711': [],   # Outdoor temperature values
+    'kodeData0712': [], # Outdoor humidity values
+    'kodeData0311': [],        # CO2 values
+    'kodeData0411': [],  # Wind speed values
+    'kodeData0511': [],    # Rainfall values
+    'kodeData0611': [],    # PAR values
+    'kodeData1011': [],   # Latitude values
+    'kodeData1012': [],    # Longitude values
+    'kodeData0911': [], # Voltage AC values
+    'kodeData0912': [], # Current AC values
+    'kodeData0913': [], # Power AC values
 }
 
 # Alarm data storage
 alarm_data = {
-    'kodeAlarmSuhuIn': 0,
-    'beritaSuhuIn': 'Normal',
-    'kodeAlarmKelembabanIn': 0,
-    'beritaKelembabanIn': 'Normal',
-    'kodeAlarmSuhuOut': 0,
-    'beritaSuhuOut': 'Normal',
-    'kodeAlarmKelembabanOut': 0,
-    'beritaKelembabanOut': 'Normal',
-    'kodeAlarmCo2': 0,
-    'beritaCo2': 'Normal',
-    'kodeAlarmWindspeed': 0,
-    'beritaWindspeed': 'Normal',
-    'kodeAlarmRainfall': 0,
-    'beritaRainfall': 'Normal',
-    'kodeAlarmPar': 0,
-    'beritaPar': 'Normal',
+    'kodeAlarm0211': 5,
+    'kodeAlarm0212': 5,
+    'kodeAlarm0711': 5,
+    'kodeAlarm0712': 5,
+    'kodeAlarm0311': 5,
+    'kodeAlarm0411': 5,
+    'kodeAlarm0511': 5,
+    'kodeAlarm0611': 5,
+    'kodeAlarm0911': 5,
+    'kodeAlarm0912': 5,
+    'kodeAlarm0913': 5,
+    'berita0211': 'N/A',
+    'berita0212': 'N/A',
+    'berita0711': 'N/A',
+    'berita0712': 'N/A',
+    'berita0311': 'N/A',
+    'berita0411': 'N/A',
+    'berita0511': 'N/A',
+    'berita0611': 'N/A',
+    'berita0911': 'N/A',
+    'berita0912': 'N/A',
+    'berita0913': 'N/A',
 }
+
+# Prediction data storage
+prediction_data = {
+    'kodeData0213': [],
+    'kodeData0214': [],
+    'kodeData0215': [],
+    'kodeData0216': [],
+    'kodeData0217': [],
+    'kodeData0218': [],
+    'kodeData0219': [],
+    'kodeData0220': [],
+    'kodeData0221': [],
+    'kodeData0222': [],
+    'kodeData0713': [],
+    'kodeData0714': [],
+    'kodeData0715': [],
+    'kodeData0716': [],
+    'kodeData0717': [],
+    'kodeData0718': [],
+    'kodeData0719': [],
+    'kodeData0720': [],
+    'kodeData0721': [],
+    'kodeData0722': [],
+    'kodeData0312': [],
+    'kodeData0313': [],
+    'kodeData0314': [],
+    'kodeData0315': [],
+    'kodeData0316': [],
+    'kodeData0412': [],
+    'kodeData0413': [],
+    'kodeData0414': [],
+    'kodeData0415': [],
+    'kodeData0416': [],
+    'kodeData0512': [],
+    'kodeData0513': [],
+    'kodeData0514': [],
+    'kodeData0515': [],
+    'kodeData0516': [],
+    'kodeData0612': [],
+    'kodeData0613': [],
+    'kodeData0614': [],
+    'kodeData0615': [],
+    'kodeData0616': [],
+}
+
+# Alamat IP ESP32 Datalogger Anda
+ESP32_DATA_URL = "http://192.168.0.240/data"
+
+def fetch_and_parse_esp_data():
+    """
+    Mengambil data CSV dari ESP32 dan mengubahnya menjadi DataFrame Pandas.
+    Menangani error jika ESP32 tidak dapat dihubungi.
+    """
+    try:
+        # Lakukan request ke ESP32 dengan timeout 5 detik
+        response = requests.get(ESP32_DATA_URL, timeout=5)
+        
+        # Periksa apakah request berhasil (status code 200)
+        if response.status_code == 200:
+            # Baca konten CSV dari respons
+            csv_data = response.text
+            # Gunakan StringIO untuk membaca string CSV seolah-olah file
+            # dan ubah menjadi DataFrame, tentukan delimiter adalah titik koma
+            df = pd.read_csv(io.StringIO(csv_data), sep=';') # <-- PERBAIKAN DI SINI
+            return df
+        else:
+            print(f"Gagal mengambil data dari ESP32. Status: {response.status_code}")
+            return pd.DataFrame() # Kembalikan DataFrame kosong jika gagal
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Tidak dapat terhubung ke ESP32 di {ESP32_DATA_URL}. Error: {e}")
+        return pd.DataFrame() # Kembalikan DataFrame kosong jika ada error koneksi
+
+# Helper function for safe numeric conversion
+def safe_float_convert(value, default_display="N/A"):
+    """
+    Safely convert a value to float with proper formatting.
+    Returns formatted string or default_display if conversion fails.
+    """
+    try:
+        # Handle None values
+        if value is None:
+            return default_display
+        
+        # Handle string values
+        if isinstance(value, str):
+            # Check if it's a default placeholder
+            if value == "-" or value.strip() == "":
+                return default_display
+            # Try to convert string to float
+            return f"{float(value):.1f}"
+        
+        # Handle numeric values (int, float)
+        if isinstance(value, (int, float)):
+            return f"{float(value):.1f}"
+        
+        # If it's any other type, return default
+        return default_display
+        
+    except (ValueError, TypeError):
+        return default_display
 
 # Define some locations in Bandung, Indonesia for demonstration
 LOCATIONS = [
@@ -193,110 +450,349 @@ PATH_POINTS = generate_path_points(-6.914744, 107.609810, points=20)
 BROKER = "192.168.0.141"
 PORT = 1883
 
+# MQTT topics
+TOPIC_CYCLE_START = "mcs/kodeData0000"  # Topic for cycle start signal
+
 # TOPIC FOR DATA
-TOPIC_SUHU = "mcs/kodeDataSuhuIn"
-TOPIC_KELEMBABAN = "mcs/kodeDataKelembabanIn"
-TOPIC_SUHU_OUT = "mcs/kodeDataSuhuOut"
-TOPIC_KELEMBABAN_OUT = "mcs/kodeDataKelembabanOut"
-TOPIC_CO2 = "mcs/kodeDataCo2"
-TOPIC_WINDSPEED = "mcs/kodeDataWindspeed"
-TOPIC_RAINFALL = "mcs/kodeDataRainfall"
-TOPIC_PAR = "mcs/kodeDataPar"
-TOPIC_LAT = "mcs/kodeDataLat"
-TOPIC_LON = "mcs/kodeDataLon"
+TOPIC_SUHU = "mcs/kodeData0211"
+TOPIC_KELEMBABAN = "mcs/kodeData0212"
+TOPIC_SUHU_OUT = "mcs/kodeData0711"
+TOPIC_KELEMBABAN_OUT = "mcs/kodeData0712"
+TOPIC_CO2 = "mcs/kodeData0311"
+TOPIC_WINDSPEED = "mcs/kodeData0411"
+TOPIC_RAINFALL = "mcs/kodeData0511"
+TOPIC_PAR = "mcs/kodeData0611"
+TOPIC_LAT = "mcs/kodeData1011"
+TOPIC_LON = "mcs/kodeData1012"
+TOPIC_VOLTAGE_AC = "mcs/kodeData0911"
+TOPIC_CURRENT_AC = "mcs/kodeData0912"
+TOPIC_POWER_AC = "mcs/kodeData0913"
 
 # TOPIC FOR ALARM
-TOPIC_ALARM_SUHU_IN = "mcs/kodeAlarmSuhuIn"
-TOPIC_ALARM_KELEMBABAN_IN = "mcs/kodeAlarmKelembabanIn"
-TOPIC_ALARM_SUHU_OUT = "mcs/kodeAlarmSuhuOut"
-TOPIC_ALARM_KELEMBABAN_OUT = "mcs/kodeAlarmKelembabanOut"
-TOPIC_ALARM_CO2 = "mcs/kodeAlarmCo2"
-TOPIC_ALARM_WINDSPEED = "mcs/kodeAlarmWindspeed"
-TOPIC_ALARM_RAINFALL = "mcs/kodeAlarmRainfall"
-TOPIC_ALARM_PAR = "mcs/kodeAlarmPar"
+TOPIC_ALARM_SUHU_IN = "mcs/kodeAlarm0211"
+TOPIC_ALARM_KELEMBABAN_IN = "mcs/kodeAlarm0212"
+TOPIC_ALARM_SUHU_OUT = "mcs/kodeAlarm0711"
+TOPIC_ALARM_KELEMBABAN_OUT = "mcs/kodeAlarm0712"
+TOPIC_ALARM_CO2 = "mcs/kodeAlarm0311"
+TOPIC_ALARM_WINDSPEED = "mcs/kodeAlarm0411"
+TOPIC_ALARM_RAINFALL = "mcs/kodeAlarm0511"
+TOPIC_ALARM_PAR = "mcs/kodeAlarm0611"
+TOPIC_ALARM_VOLTAGE_AC = "mcs/kodeAlarm0911"
+TOPIC_ALARM_CURRENT_AC = "mcs/kodeAlarm0912"
+TOPIC_ALARM_POWER_AC = "mcs/kodeAlarm0913"
 
 # TOPIC FOR BERITA
-TOPIC_BERITA_SUHU_IN = "mcs/beritaSuhuIn"
-TOPIC_BERITA_KELEMBABAN_IN = "mcs/beritaKelembabanIn"
-TOPIC_BERITA_SUHU_OUT = "mcs/beritaSuhuOut"
-TOPIC_BERITA_KELEMBABAN_OUT = "mcs/beritaKelembabanOut"
-TOPIC_BERITA_CO2 = "mcs/beritaCo2"
-TOPIC_BERITA_WINDSPEED = "mcs/beritaWindspeed"
-TOPIC_BERITA_RAINFALL = "mcs/beritaRainfall"
-TOPIC_BERITA_PAR = "mcs/beritaPar"
+TOPIC_BERITA_SUHU_IN = "mcs/berita0211"
+TOPIC_BERITA_KELEMBABAN_IN = "mcs/berita0212"
+TOPIC_BERITA_SUHU_OUT = "mcs/berita0711"
+TOPIC_BERITA_KELEMBABAN_OUT = "mcs/berita0712"
+TOPIC_BERITA_CO2 = "mcs/berita0311"
+TOPIC_BERITA_WINDSPEED = "mcs/berita0411"
+TOPIC_BERITA_RAINFALL = "mcs/berita0511"
+TOPIC_BERITA_PAR = "mcs/berita0611"
+TOPIC_BERITA_VOLTAGE_AC = "mcs/berita0911"
+TOPIC_BERITA_CURRENT_AC = "mcs/berita0912"
+TOPIC_BERITA_POWER_AC = "mcs/berita0913"
+
+# TOPIC FOR PREDICTION
+TOPIC_SUHU_PREDICT1 = "mcs/kodeData0213"
+TOPIC_SUHU_PREDICT2 = "mcs/kodeData0214"
+TOPIC_SUHU_PREDICT3 = "mcs/kodeData0215"
+TOPIC_SUHU_PREDICT4 = "mcs/kodeData0216"
+TOPIC_SUHU_PREDICT5 = "mcs/kodeData0217"
+TOPIC_HUMIDITY_PREDICT1 = "mcs/kodeData0218"
+TOPIC_HUMIDITY_PREDICT2 = "mcs/kodeData0219"
+TOPIC_HUMIDITY_PREDICT3 = "mcs/kodeData0220"
+TOPIC_HUMIDITY_PREDICT4 = "mcs/kodeData0221"
+TOPIC_HUMIDITY_PREDICT5 = "mcs/kodeData0222"
+TOPIC_SUHUOUT_PREDICT1 = "mcs/kodeData0713"
+TOPIC_SUHUOUT_PREDICT2 = "mcs/kodeData0714"
+TOPIC_SUHUOUT_PREDICT3 = "mcs/kodeData0715"
+TOPIC_SUHUOUT_PREDICT4 = "mcs/kodeData0716"
+TOPIC_SUHUOUT_PREDICT5 = "mcs/kodeData0717"
+TOPIC_HUMIDITYOUT_PREDICT1 = "mcs/kodeData0718"
+TOPIC_HUMIDITYOUT_PREDICT2 = "mcs/kodeData0719"
+TOPIC_HUMIDITYOUT_PREDICT3 = "mcs/kodeData0720"
+TOPIC_HUMIDITYOUT_PREDICT4 = "mcs/kodeData0721"
+TOPIC_HUMIDITYOUT_PREDICT5 = "mcs/kodeData0722"
+TOPIC_CO2_PREDICT1 = "mcs/kodeData0312"
+TOPIC_CO2_PREDICT2 = "mcs/kodeData0313"
+TOPIC_CO2_PREDICT3 = "mcs/kodeData0314"
+TOPIC_CO2_PREDICT4 = "mcs/kodeData0315"
+TOPIC_CO2_PREDICT5 = "mcs/kodeData0316"
+TOPIC_WINDSPEED_PREDICT1 = "mcs/kodeData0412"
+TOPIC_WINDSPEED_PREDICT2 = "mcs/kodeData0413"
+TOPIC_WINDSPEED_PREDICT3 = "mcs/kodeData0414"
+TOPIC_WINDSPEED_PREDICT4 = "mcs/kodeData0415"
+TOPIC_WINDSPEED_PREDICT5 = "mcs/kodeData0416"
+TOPIC_RAINFALL_PREDICT1 = "mcs/kodeData0512"
+TOPIC_RAINFALL_PREDICT2 = "mcs/kodeData0513"
+TOPIC_RAINFALL_PREDICT3 = "mcs/kodeData0514"
+TOPIC_RAINFALL_PREDICT4 = "mcs/kodeData0515"
+TOPIC_RAINFALL_PREDICT5 = "mcs/kodeData0516"
+TOPIC_PAR_PREDICT1 = "mcs/kodeData0612"
+TOPIC_PAR_PREDICT2 = "mcs/kodeData0613"
+TOPIC_PAR_PREDICT3 = "mcs/kodeData0614"
+TOPIC_PAR_PREDICT4 = "mcs/kodeData0615"
+TOPIC_PAR_PREDICT5 = "mcs/kodeData0616"
+
+# NEW: Function to check if data is stale
+def is_data_stale():
+    """Check if the last received data is older than the timeout period"""
+    if connection_status['last_message_time'] is None:
+        return True
+    
+    time_diff = datetime.now() - connection_status['last_message_time']
+    return time_diff.total_seconds() > connection_status['connection_timeout']
+
+# NEW: Function to reset data to defaults
+def reset_to_default_values():
+    """Reset all sensor data to default values"""
+    global data
+    global alarm_data
+    global prediction_data
+    current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
+    
+    # Clear existing data and add default values
+    for key in DEFAULT_VALUES:
+        data[key] = [DEFAULT_VALUES[key]]
+
+    # Clear existing alarm_data and add default_alarm_values
+    for key2 in DEFAULT_ALARM_VALUES:
+        alarm_data[key2] = [DEFAULT_ALARM_VALUES[key2]]
+
+    # Clear existing prediction_data and add default_prediction_values
+    for key3 in DEFAULT_PREDICTION_VALUES:
+        prediction_data[key3] = [DEFAULT_PREDICTION_VALUES[key3]] 
+    
+    data['waktu'] = [current_time]
+    print("Data reset to default values due to connection timeout")
 
 # MQTT Callback
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to HiveMQ Broker")
-        client.subscribe([(TOPIC_SUHU, 0), (TOPIC_KELEMBABAN, 0),
+        client.subscribe([(TOPIC_CYCLE_START, 0),
+                          (TOPIC_SUHU, 0), (TOPIC_KELEMBABAN, 0),
                           (TOPIC_SUHU_OUT, 0), (TOPIC_KELEMBABAN_OUT, 0),
                           (TOPIC_CO2, 0), (TOPIC_WINDSPEED, 0), 
                           (TOPIC_RAINFALL, 0), (TOPIC_PAR, 0),
                           (TOPIC_LAT, 0),  (TOPIC_LON, 0),
+                          (TOPIC_VOLTAGE_AC, 0), (TOPIC_CURRENT_AC, 0), (TOPIC_POWER_AC, 0),
                           (TOPIC_ALARM_SUHU_IN, 0), (TOPIC_ALARM_KELEMBABAN_IN, 0),
                           (TOPIC_ALARM_SUHU_OUT, 0), (TOPIC_ALARM_KELEMBABAN_OUT, 0),
                           (TOPIC_ALARM_CO2, 0), (TOPIC_ALARM_WINDSPEED, 0),
                           (TOPIC_ALARM_RAINFALL, 0), (TOPIC_ALARM_PAR, 0),
+                          (TOPIC_ALARM_VOLTAGE_AC, 0), (TOPIC_ALARM_CURRENT_AC, 0),
+                          (TOPIC_ALARM_POWER_AC, 0), (TOPIC_BERITA_VOLTAGE_AC, 0),
+                          (TOPIC_BERITA_CURRENT_AC, 0), (TOPIC_BERITA_POWER_AC, 0),
                           (TOPIC_BERITA_SUHU_IN, 0), (TOPIC_BERITA_KELEMBABAN_IN, 0),
                           (TOPIC_BERITA_SUHU_OUT, 0), (TOPIC_BERITA_KELEMBABAN_OUT, 0),
                           (TOPIC_BERITA_CO2, 0), (TOPIC_BERITA_WINDSPEED, 0),
-                          (TOPIC_BERITA_RAINFALL, 0), (TOPIC_BERITA_PAR, 0)
+                          (TOPIC_BERITA_RAINFALL, 0), (TOPIC_BERITA_PAR, 0),
+                          (TOPIC_SUHU_PREDICT1, 0), (TOPIC_SUHU_PREDICT2, 0),
+                          (TOPIC_SUHU_PREDICT3, 0), (TOPIC_SUHU_PREDICT4, 0),
+                          (TOPIC_SUHU_PREDICT5, 0), (TOPIC_HUMIDITY_PREDICT1, 0),
+                          (TOPIC_HUMIDITY_PREDICT2, 0), (TOPIC_HUMIDITY_PREDICT3, 0),
+                          (TOPIC_HUMIDITY_PREDICT4, 0), (TOPIC_HUMIDITY_PREDICT5, 0),
+                          (TOPIC_SUHUOUT_PREDICT1, 0), (TOPIC_SUHUOUT_PREDICT2, 0),
+                          (TOPIC_SUHUOUT_PREDICT3, 0), (TOPIC_SUHUOUT_PREDICT4, 0),
+                          (TOPIC_SUHUOUT_PREDICT5, 0), (TOPIC_HUMIDITYOUT_PREDICT1, 0),
+                          (TOPIC_HUMIDITYOUT_PREDICT2, 0), (TOPIC_HUMIDITYOUT_PREDICT3, 0),
+                          (TOPIC_HUMIDITYOUT_PREDICT4, 0), (TOPIC_HUMIDITYOUT_PREDICT5, 0),
+                          (TOPIC_CO2_PREDICT1, 0), (TOPIC_CO2_PREDICT2, 0),
+                          (TOPIC_CO2_PREDICT3, 0), (TOPIC_CO2_PREDICT4, 0),
+                          (TOPIC_CO2_PREDICT5, 0), (TOPIC_PAR_PREDICT1, 0),
+                          (TOPIC_PAR_PREDICT2, 0), (TOPIC_PAR_PREDICT3, 0),
+                          (TOPIC_PAR_PREDICT4, 0), (TOPIC_PAR_PREDICT5, 0),
+                          (TOPIC_WINDSPEED_PREDICT1, 0), (TOPIC_WINDSPEED_PREDICT2, 0),
+                          (TOPIC_WINDSPEED_PREDICT3, 0), (TOPIC_WINDSPEED_PREDICT4, 0),
+                          (TOPIC_WINDSPEED_PREDICT5, 0), (TOPIC_RAINFALL_PREDICT1, 0),
+                          (TOPIC_RAINFALL_PREDICT2, 0), (TOPIC_RAINFALL_PREDICT3, 0),
+                          (TOPIC_RAINFALL_PREDICT4, 0), (TOPIC_RAINFALL_PREDICT5, 0)                                                           
                           ])  # Subscribe ke topik suhu & kelembaban
     else:
         print(f"Failed to connect, return code {rc}")
 
+# NEW: Enhanced on_disconnect callback
+def on_disconnect(client, userdata, rc):
+    global connection_status
+    connection_status['connected'] = False
+    if rc != 0:
+        print(f"Unexpected MQTT disconnection. Return code: {rc}")
+        print("Attempting to reconnect...")
+        # Attempt to reconnect
+        try:
+            client.reconnect()
+        except Exception as e:
+            print(f"Reconnection failed: {e}")
+
 def on_message(client, userdata, msg):
-    global data, alarm_data
+    global data, alarm_data, connection_status, prediction_data
     try:
-        topic = msg.topic.split('/')[-1]  # Get the last part of the topic (e.g., 'suhu' from 'esp32/suhu')
+        # Update connection status
+        connection_status['last_message_time'] = datetime.now()
+        connection_status['connected'] = True
+        
+        topic = msg.topic.split('/')[-1]  # Get the last part of the topic
+
+        # Define a consistent history length
+        MAX_HISTORY = 10
+
+        # List of topics that appear in the real-time table
+        table_data_topics = [
+            'kodeData0211', 'kodeData0212', 'kodeData0711', 'kodeData0712',
+            'kodeData0311', 'kodeData0411', 'kodeData0511', 'kodeData0611',
+            'kodeData1011', 'kodeData1012', 'kodeData0911', 'kodeData0912', 
+            'kodeData0913'
+        ]
+
+        # Topics to round to 2 decimal places
+        topics_to_round = [
+            'kodeData0211', 'kodeData0212', 'kodeData0711', 'kodeData0712',
+            'kodeData0311', 'kodeData0411', 'kodeData0511', 'kodeData0611',
+            'kodeData0911', 'kodeData0912', 'kodeData0913'
+        ]
         
         # Process regular data topics
-        if topic in ['kodeDataSuhuIn', 'kodeDataKelembabanIn', 'kodeDataSuhuOut', 'kodeDataKelembabanOut',
-                    'kodeDataCo2', 'kodeDataWindspeed', 'kodeDataRainfall', 'kodeDataPar',
-                    'kodeDataLat', 'kodeDataLon']:
-            payload = float(msg.payload.decode())
+        if topic == 'kodeData0000':
+            raw_payload = float(msg.payload.decode())
+            payload = round(raw_payload, 2) if topic in topics_to_round else raw_payload
+            
             current_time = datetime.now(tz=pytz.timezone('Asia/Jakarta')).strftime('%H:%M:%S')
+            data['waktu'].append(current_time)
+            data[topic].append(payload) # Use the potentially rounded payload
+
+            for key in table_data_topics:
+                last_value = data[key][-1] if data[key] else None
+                data[key].append(last_value)
+
+        # Other data topics: These UPDATE the last row
+        elif topic in table_data_topics:
+            raw_payload = float(msg.payload.decode())
+            payload = round(raw_payload, 2) if topic in topics_to_round else raw_payload
             
-            if len(data[topic]) >= 20:  # Keep only last 20 points
-                data[topic] = data[topic][1:]
-            data[topic].append(payload)
-            
-            # Keep waktu list in sync with the latest data addition
-            # This ensures all lists have the same length
-            if topic == 'kodeDataSuhuIn':  # Only update waktu when temperature data comes in
-                if len(data['waktu']) >= 20:
-                    data['waktu'] = data['waktu'][1:]
-                data['waktu'].append(current_time)
+            if data[topic]:
+                data[topic][-1] = payload # Use the rounded payload
         
         # Process alarm code topics
         elif topic.startswith('kodeAlarm'):
-            # For example: 'kodeAlarmSuhuIn'
             try:
-                # Parse as integer for alarm codes
                 alarm_value = int(msg.payload.decode())
                 alarm_data[topic] = alarm_value
+                print(f"Updated alarm {topic}: {alarm_value}")
             except ValueError:
                 print(f"Error parsing alarm value for {topic}: {msg.payload.decode()}")
         
         # Process berita (alert message) topics
         elif topic.startswith('berita'):
-            # For example: 'beritaSuhuIn'
-            # Keep as string for berita messages
             berita_value = msg.payload.decode()
             alarm_data[topic] = berita_value
+            print(f"Updated berita {topic}: {berita_value}")
+
+        # Process prediction data topics
+        elif  topic in ['kodeData0213', 'kodeData0214', 'kodeData0215', 'kodeData0216',
+                    'kodeData0217', 'kodeData0218', 'kodeData0219', 'kodeData0220',
+                    'kodeData0221', 'kodeData0222', 'kodeData0713', 'kodeData0714', 
+                    'kodeData0715', 'kodeData0716', 'kodeData0717', 'kodeData0718',
+                    'kodeData0719', 'kodeData0720', 'kodeData0721', 'kodeData0722',
+                    'kodeData0312', 'kodeData0313', 'kodeData0314', 'kodeData0315',
+                    'kodeData0316', 'kodeData0412', 'kodeData0413', 'kodeData0414',
+                    'kodeData0415', 'kodeData0416', 'kodeData0512', 'kodeData0513',
+                    'kodeData0514', 'kodeData0515', 'kodeData0516', 'kodeData0612',
+                    'kodeData0613', 'kodeData0614', 'kodeData0615', 'kodeData0616']:
+            # Process prediction values
+            try:
+                predict_value = float(msg.payload.decode())
+                prediction_data[topic].append(predict_value)
+                print(f"Updated prediction {topic}: {predict_value}")
+            except ValueError:
+                print(f"Error parsing prediction value for {topic}: {msg.payload.decode()}")
+
+        # Trim all historical lists at the end
+        for key in data.keys():
+            if len(data[key]) > MAX_HISTORY:
+                data[key] = data[key][-MAX_HISTORY:]
 
     except Exception as e:
         print(f"Error processing MQTT message: {e}")
 
-# MQTT Client
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect(BROKER, PORT, 60)
+# UPDATED: MQTT Client with enhanced reconnection logic
+def setup_mqtt_client():
+    """Setup MQTT client with proper error handling and reconnection"""
+    try:
+        client = mqtt.Client()  # Maintain session for better reconnection
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.on_disconnect = on_disconnect
+        
+        # Set keepalive and other connection parameters
+        client.keepalive = 60
+        
+        # Connect with error handling
+        result = client.connect(BROKER, PORT, 60)
+        if result == 0:
+            print("MQTT client connected successfully")
+            return client
+        else:
+            print(f"Failed to connect to MQTT broker. Return code: {result}")
+            return None
+            
+    except Exception as e:
+        print(f"Error setting up MQTT client: {e}")
+        return None
+    
+# NEW: Background thread to monitor connection and reset data if needed
+def connection_monitor():
+    """Monitor connection status and reset data if no messages received"""
+    while True:
+        try:
+            if is_data_stale():
+                if connection_status['connected']:
+                    print("No recent data received, connection may be stale")
+                    connection_status['connected'] = False
+                reset_to_default_values()
+            time.sleep(30)  # Check every 30 seconds
+        except Exception as e:
+            print(f"Error in connection monitor: {e}")
+            time.sleep(30)
 
-# Jalankan MQTT dalam thread
-threading.Thread(target=client.loop_forever, daemon=True).start()
+# NEW: MQTT reconnection thread
+def mqtt_reconnection_handler(client):
+    """Handle MQTT reconnection in a separate thread"""
+    while True:
+        try:
+            if not connection_status['connected']:
+                print("Attempting MQTT reconnection...")
+                client.reconnect()
+                time.sleep(10)  # Wait before next attempt
+            else:
+                time.sleep(60)  # Check every minute when connected
+        except Exception as e:
+            print(f"Reconnection attempt failed: {e}")
+            time.sleep(10)
+
+# Initialize MQTT client
+mqtt_client = setup_mqtt_client()
+if mqtt_client:
+    # Run MQTT in thread only if connection successful
+    mqtt_thread = threading.Thread(target=mqtt_client.loop_forever, daemon=True)
+    mqtt_thread.start()
+    
+    # Start connection monitor thread
+    monitor_thread = threading.Thread(target=connection_monitor, daemon=True)
+    monitor_thread.start()
+    
+    # Start reconnection handler thread  
+    reconnect_thread = threading.Thread(target=mqtt_reconnection_handler, args=(mqtt_client,), daemon=True)
+    reconnect_thread.start()
+    
+    print("MQTT client and monitoring threads started")
+else:
+    print("MQTT client not started due to connection issues")
+    # Start monitor thread even without MQTT to reset data
+    monitor_thread = threading.Thread(target=connection_monitor, daemon=True)
+    monitor_thread.start()
 
 # main layout dash
 app_dash.layout = html.Div([
@@ -352,14 +848,15 @@ def display_page(pathname):
 )
 def update_main_dashboard(n):
     try:
-        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else 0
-        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else 0
-        suhu_out = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else 0
-        kelembaban_out = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else 0
-        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else 0
-        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else 0
-        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else 0
-        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else 0
+        # Get latest values or default if no data
+        suhu = data['kodeData0211'][-1] if data['kodeData0211'] else DEFAULT_VALUES['kodeData0211']
+        kelembaban = data['kodeData0212'][-1] if data['kodeData0212'] else DEFAULT_VALUES['kodeData0212']
+        suhu_out = data['kodeData0711'][-1] if data['kodeData0711'] else DEFAULT_VALUES['kodeData0711']
+        kelembaban_out = data['kodeData0712'][-1] if data['kodeData0712'] else DEFAULT_VALUES['kodeData0712']
+        co2 = data['kodeData0311'][-1] if data['kodeData0311'] else DEFAULT_VALUES['kodeData0311']
+        windspeed = data['kodeData0411'][-1] if data['kodeData0411'] else DEFAULT_VALUES['kodeData0411']
+        rainfall = data['kodeData0511'][-1] if data['kodeData0511'] else DEFAULT_VALUES['kodeData0511']
+        par = data['kodeData0611'][-1] if data['kodeData0611'] else DEFAULT_VALUES['kodeData0611']
 
         return (
             f" {suhu}°C",
@@ -403,19 +900,19 @@ def update_th_in_dashboard(n):
         empty_humid_fig = go.Figure(layout=dict(
             title="Humidity Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="Humidity (%)", range=[40, 100]),
+            yaxis=dict(title="Humidity (%)", range=[0, 100]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=150,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
         ))
         
         # Check if we have data
-        if not data['kodeDataSuhuIn'] or not data['kodeDataKelembabanIn'] or not data['waktu']:
+        if not data['kodeData0211'] or not data['kodeData0212'] or not data['waktu']:
             return suhu_value, kelembaban_value, empty_temp_fig, empty_humid_fig
         
         # Get the latest values
-        suhu = data['kodeDataSuhuIn'][-1] if data['kodeDataSuhuIn'] else 0
-        kelembaban = data['kodeDataKelembabanIn'][-1] if data['kodeDataKelembabanIn'] else 0
+        suhu = data['kodeData0211'][-1] if data['kodeData0211'] else DEFAULT_VALUES['kodeData0211']
+        kelembaban = data['kodeData0212'][-1] if data['kodeData0212'] else DEFAULT_VALUES['kodeData0212']
         suhu_value = f"{suhu}°C"
         kelembaban_value = f"{kelembaban}%"
         
@@ -424,16 +921,16 @@ def update_th_in_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataSuhuIn']) > 3:
-                # We'll use only 3 data points for simplicity
+            if len(data['waktu']) > 3 and len(data['kodeData0211']) > 3:
+                # We'll use only 4 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataSuhuIn']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0211']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataSuhuIn'][i] for i in indices]
+                selected_values = [data['kodeData0211'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -498,16 +995,16 @@ def update_th_in_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataKelembabanIn']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0212']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataKelembabanIn']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0212']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataKelembabanIn'][i] for i in indices]
+                selected_values = [data['kodeData0212'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -533,7 +1030,7 @@ def update_th_in_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=150,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -552,7 +1049,7 @@ def update_th_in_dashboard(n):
                 humid_fig.update_layout(
                     title="Humidity Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     height=150,
                     showlegend=False
                 )
@@ -613,19 +1110,19 @@ def update_th_out_dashboard(n):
         empty_humid_fig = go.Figure(layout=dict(
             title="Humidity Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="Humidity (%)", range=[40, 100]),
+            yaxis=dict(title="Humidity (%)", range=[0, 100]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=150,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
         ))
         
         # Check if we have data
-        if not data['kodeDataSuhuOut'] or not data['kodeDataKelembabanOut'] or not data['waktu']:
+        if not data['kodeData0711'] or not data['kodeData0712'] or not data['waktu']:
             return suhu_value, kelembaban_value, empty_temp_fig, empty_humid_fig
         
         # Get the latest values
-        suhu = data['kodeDataSuhuOut'][-1] if data['kodeDataSuhuOut'] else 0
-        kelembaban = data['kodeDataKelembabanOut'][-1] if data['kodeDataKelembabanOut'] else 0
+        suhu = data['kodeData0711'][-1] if data['kodeData0711'] else DEFAULT_VALUES['kodeData0711']
+        kelembaban = data['kodeData0712'][-1] if data['kodeData0712'] else DEFAULT_VALUES['kodeData0712']
         suhu_value = f"{suhu}°C"
         kelembaban_value = f"{kelembaban}%"
 
@@ -634,16 +1131,16 @@ def update_th_out_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataSuhuOut']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0711']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataSuhuOut']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0711']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataSuhuOut'][i] for i in indices]
+                selected_values = [data['kodeData0711'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -708,16 +1205,16 @@ def update_th_out_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataKelembabanOut']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0712']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataKelembabanOut']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0712']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataKelembabanOut'][i] for i in indices]
+                selected_values = [data['kodeData0712'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -743,7 +1240,7 @@ def update_th_out_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=150,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -762,7 +1259,7 @@ def update_th_out_dashboard(n):
                 humid_fig.update_layout(
                     title="Humidity Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="Humidity (%)", range=[40, 100]),
+                    yaxis=dict(title="Humidity (%)", range=[0, 100]),
                     height=150,
                     showlegend=False
                 )
@@ -817,11 +1314,11 @@ def update_windspeed_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataWindspeed'] or not data['waktu']:
+        if not data['kodeData0411'] or not data['waktu']:
             return windspeed_value, empty_windspeed_fig
         
         # Get the latest values
-        windspeed = data['kodeDataWindspeed'][-1] if data['kodeDataWindspeed'] else 0
+        windspeed = data['kodeData0411'][-1] if data['kodeData0411'] else DEFAULT_VALUES['kodeData0411']
         windspeed_value = f"{windspeed}m/s"
         
         # Create windspeed graph with properly aligned x and y values
@@ -829,16 +1326,16 @@ def update_windspeed_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataWindspeed']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0411']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataWindspeed']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0411']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataWindspeed'][i] for i in indices]
+                selected_values = [data['kodeData0411'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -931,18 +1428,18 @@ def update_rainfall_dashboard(n):
         empty_rainfall_fig = go.Figure(layout=dict(
             title="Rainfall Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="Rainfall (mm)", range=[0, 100]),
+            yaxis=dict(title="Rainfall (mm)", range=[0, 70]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=300,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
         ))
         
         # Check if we have data
-        if not data['kodeDataRainfall'] or not data['waktu']:
+        if not data['kodeData0511'] or not data['waktu']:
             return rainfall_value, empty_rainfall_fig
         
         # Get the latest values
-        rainfall = data['kodeDataRainfall'][-1] if data['kodeDataRainfall'] else 0
+        rainfall = data['kodeData0511'][-1] if data['kodeData0511'] else DEFAULT_VALUES['kodeData0511']
         rainfall_value = f"{rainfall}mm"
         
         # Create rainfall graph with properly aligned x and y values
@@ -950,16 +1447,16 @@ def update_rainfall_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataRainfall']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0511']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataRainfall']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0511']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataRainfall'][i] for i in indices]
+                selected_values = [data['kodeData0511'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -985,7 +1482,7 @@ def update_rainfall_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="Rainfall (mm)", range=[0, 100]),
+                    yaxis=dict(title="Rainfall (mm)", range=[0, 70]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=300,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -1004,7 +1501,7 @@ def update_rainfall_dashboard(n):
                 rainfall_fig.update_layout(
                     title="Rainfall Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="Rainfall (mm)", range=[0, 100]),
+                    yaxis=dict(title="Rainfall (mm)", range=[0, 70]),
                     height=300,
                     showlegend=False
                 )
@@ -1052,18 +1549,18 @@ def update_co2_dashboard(n):
         co2_fig = go.Figure(layout=dict(
             title="CO2 Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="CO2 (PPM)", range=[300, 10000]),
+            yaxis=dict(title="CO2 (PPM)", range=[0, 2000]),
             margin=dict(l=40, r=20, t=40, b=30),
             height=300,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
         ))
         
         # Check if we have data
-        if not data['kodeDataCo2'] or not data['waktu']:
+        if not data['kodeData0311'] or not data['waktu']:
             return co2_value, co2_fig
         
         # Get the latest values
-        co2 = data['kodeDataCo2'][-1] if data['kodeDataCo2'] else 0
+        co2 = data['kodeData0311'][-1] if data['kodeData0311'] else DEFAULT_VALUES['kodeData0311']
         co2_value = f"{co2}PPM"
         
 
@@ -1072,16 +1569,16 @@ def update_co2_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataCo2']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0311']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataCo2']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0311']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataCo2'][i] for i in indices]
+                selected_values = [data['kodeData0311'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1107,7 +1604,7 @@ def update_co2_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="CO2 (PPM)", range=[300, 10000]),
+                    yaxis=dict(title="CO2 (PPM)", range=[0, 2000]),
                     margin=dict(l=40, r=20, t=40, b=30),
                     height=300,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
@@ -1126,7 +1623,7 @@ def update_co2_dashboard(n):
                 co2_fig.update_layout(
                     title="CO2 Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="CO2 (PPM)", range=[300, 10000]),
+                    yaxis=dict(title="CO2 (PPM)", range=[0, 2000]),
                     height=300,
                     showlegend=False
                 )
@@ -1181,11 +1678,11 @@ def update_par_dashboard(n):
         ))
         
         # Check if we have data
-        if not data['kodeDataPar'] or not data['waktu']:
+        if not data['kodeData0611'] or not data['waktu']:
             return par_value, par_fig
         
         # Get the latest values
-        par = data['kodeDataPar'][-1] if data['kodeDataPar'] else 0
+        par = data['kodeData0611'][-1] if data['kodeData0611'] else DEFAULT_VALUES['kodeData0611']
         par_value = f"{par}μmol/m²/s"
         
         # Create par graph with properly aligned x and y values
@@ -1193,16 +1690,16 @@ def update_par_dashboard(n):
 
         try:
             # Ensure we have data to work with
-            if len(data['waktu']) > 3 and len(data['kodeDataPar']) > 3:
+            if len(data['waktu']) > 3 and len(data['kodeData0611']) > 3:
                 # We'll use only 3 data points for simplicity
                 num_points = 4
                 
                 # Select evenly spaced indices from the data
-                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeDataPar']))-1, num_points, dtype=int)
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0611']))-1, num_points, dtype=int)
                 
                 # Get the selected timestamps and temperature values
                 selected_timestamps = [data['waktu'][i] for i in indices]
-                selected_values = [data['kodeDataPar'][i] for i in indices]
+                selected_values = [data['kodeData0611'][i] for i in indices]
                 
                 # Create x values (0, 1, 2) for plotting
                 x_plot = list(range(num_points))
@@ -1279,31 +1776,6 @@ def update_par_dashboard(n):
         ))
         return "N/A", default_fig
 
-# Add this function to help debug what's happening with your data
-# and the table th_in
-# @app_dash.callback(
-#     Output('historical-table-th-in', 'data'),
-#     [Input('interval_thin', 'n_intervals')]
-# )
-# def update_historical_table(n):
-#     try:            
-#         # Create table data from the last 4 entries
-#         sample_size = min(2, len(data['waktu']))
-#         table_data = []
-        
-#         for i in range(sample_size):
-#             idx = -(i+1)  # Index from the end of the list
-#             table_data.append({
-#                 "time": data['waktu'][idx] if idx < len(data['waktu']) else "",
-#                 "temperature_in_historical": f"{data['kodeDataSuhuIn'][idx]:.1f}%" if idx < len(data['kodeDataSuhuIn']) else "",
-#                 "humidity_in_historical": f"{data['kodeDataKelembabanIn'][idx]:.1f}%" if idx < len(data['kodeDataKelembabanIn']) else ""
-#             })
-            
-#         return table_data
-#     except Exception as e:
-#         print(f"Error in update_historical_table: {e}")
-#         return [{}]
-
 # Callbacks to update the realtime table
 @app_dash.callback(
     Output('realtime-table', 'data'),
@@ -1324,14 +1796,39 @@ def update_realtime_table(n_intervals):
             try:
                 table_row = {
                     "Time": data['waktu'][i] if i < len(data['waktu']) else "N/A",
-                    "Temp In (°C)": f"{float(data['kodeDataSuhuIn'][i]):.1f}" if i < len(data['kodeDataSuhuIn']) else "N/A",
-                    "Humidity In (%)": f"{float(data['kodeDataKelembabanIn'][i]):.1f}" if i < len(data['kodeDataKelembabanIn']) else "N/A",
-                    "Temp Out (°C)": f"{float(data['kodeDataSuhuOut'][i]):.1f}" if i < len(data['kodeDataSuhuOut']) else "N/A",
-                    "Humidity Out (%)": f"{float(data['kodeDataKelembabanOut'][i]):.1f}" if i < len(data['kodeDataKelembabanOut']) else "N/A",
-                    "PAR (μmol/m²/s)": f"{float(data['kodeDataPar'][i]):.1f}" if i < len(data['kodeDataPar']) else "N/A",
-                    "CO2 (PPM)": f"{float(data['kodeDataCo2'][i]):.1f}" if i < len(data['kodeDataCo2']) else "N/A",
-                    "Windspeed (m/s)": f"{float(data['kodeDataWindspeed'][i]):.1f}" if i < len(data['kodeDataWindspeed']) else "N/A",
-                    "Rainfall (mm)": f"{float(data['kodeDataRainfall'][i]):.1f}" if i < len(data['kodeDataRainfall']) else "N/A"
+                    "Temp In (°C)": safe_float_convert(
+                        data['kodeData0211'][i] if i < len(data['kodeData0211']) else None
+                    ),
+                    "Humidity In (%)": safe_float_convert(
+                        data['kodeData0212'][i] if i < len(data['kodeData0212']) else None
+                    ),
+                    "Temp Out (°C)": safe_float_convert(
+                        data['kodeData0711'][i] if i < len(data['kodeData0711']) else None
+                    ),
+                    "Humidity Out (%)": safe_float_convert(
+                        data['kodeData0712'][i] if i < len(data['kodeData0712']) else None
+                    ),
+                    "PAR (μmol/m²/s)": safe_float_convert(
+                        data['kodeData0611'][i] if i < len(data['kodeData0611']) else None
+                    ),
+                    "CO2 (PPM)": safe_float_convert(
+                        data['kodeData0311'][i] if i < len(data['kodeData0311']) else None
+                    ),
+                    "Windspeed (m/s)": safe_float_convert(
+                        data['kodeData0411'][i] if i < len(data['kodeData0411']) else None
+                    ),
+                    "Rainfall (mm)": safe_float_convert(
+                        data['kodeData0511'][i] if i < len(data['kodeData0511']) else None
+                    ),
+                    "Voltage AC (V)": safe_float_convert(
+                        data['kodeData0911'][i] if i < len(data['kodeData0911']) else None
+                    ),
+                    "Current AC (A)": safe_float_convert(
+                        data['kodeData0912'][i] if i < len(data['kodeData0912']) else None
+                    ),
+                    "Power AC (W)": safe_float_convert(
+                        data['kodeData0913'][i] if i < len(data['kodeData0913']) else None
+                    ),
                 }
                 table_data.append(table_row)
             except (IndexError, ValueError) as e:
@@ -1353,7 +1850,7 @@ def update_realtime_table(n_intervals):
         })
     
     return table_data
-    
+
 # Callbacks to logout
 @app_dash.callback(
     Output("logout-redirect", "href"),
@@ -1389,25 +1886,49 @@ def update_gps_data(n_intervals):
     # Create a local copy of locations including eFarming
     locations = LOCATIONS + [efarming_location]
     
+    # Safe GPS coordinate conversion
+    def safe_coordinate_convert(coord_value, fallback_value):
+        """Safely convert coordinate value to float"""
+        try:
+            if coord_value is None:
+                return fallback_value
+            if isinstance(coord_value, str):
+                if coord_value == "-" or coord_value.strip() == "":
+                    return fallback_value
+                return float(coord_value)
+            if isinstance(coord_value, (int, float)):
+                return float(coord_value)
+            return fallback_value
+        except (ValueError, TypeError):
+            return fallback_value
+    
     # Check if we have GPS data from MQTT
-    if data["kodeDataLat"] and data["kodeDataLon"]:
-        # Use the latest GPS coordinates from the MQTT data
-        current_lat = data["kodeDataLat"][-1]
-        current_lon = data["kodeDataLon"][-1]
+    if data["kodeData1011"] and data["kodeData1012"]:
+        # Use the latest GPS coordinates from the MQTT data with safe conversion
+        raw_lat = data["kodeData1011"][-1] if len(data["kodeData1011"]) > 0 else None
+        raw_lon = data["kodeData1012"][-1] if len(data["kodeData1012"]) > 0 else None
         
-        # Find closest known location
-        min_distance = float('inf')
-        location_name = "Unknown Location"
-        for loc in locations:
-            dist = ((loc["lat"] - current_lat)**2 + (loc["lon"] - current_lon)**2)**0.5
-            if dist < min_distance:
-                min_distance = dist
-                location_name = f"Near {loc['name']}"
+        current_lat = safe_coordinate_convert(raw_lat, efarming_location["lat"])
+        current_lon = safe_coordinate_convert(raw_lon, efarming_location["lon"])
+        
+        # Only search for closest location if we have valid coordinates (not fallback)
+        if (raw_lat is not None and raw_lat != "-" and 
+            raw_lon is not None and raw_lon != "-"):
+            # Find closest known location
+            min_distance = float('inf')
+            location_name = "Unknown Location"
+            for loc in locations:
+                dist = ((loc["lat"] - current_lat)**2 + (loc["lon"] - current_lon)**2)**0.5
+                if dist < min_distance:
+                    min_distance = dist
+                    location_name = f"Near {loc['name']}"
+        else:
+            location_name = "eFarming Corpora Community (Default)"
     else:
         # Fallback if no MQTT data is available
         current_lat = efarming_location["lat"]
         current_lon = efarming_location["lon"]
-        location_name = "eFarming Corpora Community"
+        location_name = "eFarming Corpora Community (Default)"
     
     # Create the map figure
     fig = go.Figure()
@@ -1438,28 +1959,13 @@ def update_gps_data(n_intervals):
         name="Reference Points"
     ))
     
-    # Add path history (last few points)
-    # history_length = min(10, len(data["kodeDataLat"]))
-    # if history_length > 1:
-    #     # Get the last few GPS points from the MQTT data
-    #     path_lats = data["kodeDataLat"][-history_length:]
-    #     path_lons = data["kodeDataLon"][-history_length:]
-        
-    #     fig.add_trace(go.Scattermapbox(
-    #         lat=path_lats,
-    #         lon=path_lons,
-    #         mode='lines',
-    #         line=dict(width=2, color='orange'),
-    #         name="Device Path"
-    #     ))
-    
     # Configure the map layout
     fig.update_layout(
         mapbox=dict(
             style="open-street-map",
-            center=dict(lat=current_lat, lon=current_lon),  # Center on current coordinates
-            zoom=15,  # Default zoom level (slightly zoomed in)
-            uirevision=f"{current_lat}_{current_lon}"  # Preserve zoom level while centered on current point
+            center=dict(lat=current_lat, lon=current_lon),
+            zoom=15,
+            uirevision=f"{current_lat}_{current_lon}"
         ),
         margin=dict(l=0, r=0, t=0, b=0),
         height=500,
@@ -1479,47 +1985,1237 @@ def update_gps_data(n_intervals):
     
     return fig, location_name, coordinates_text
 
-# Alarm Callback
+# Updated Alarm Callback with Circle Status
 @app_dash.callback(
     [Output("temp-in-alarm", "children"),
      Output("temp-in-berita", "children"),
+     Output("temp-in-circle", "className"),
      Output("humidity-in-alarm", "children"),
      Output("humidity-in-berita", "children"),
+     Output("humidity-in-circle", "className"),
      Output("temp-out-alarm", "children"),
      Output("temp-out-berita", "children"),
+     Output("temp-out-circle", "className"),
      Output("humidity-out-alarm", "children"),
      Output("humidity-out-berita", "children"),
+     Output("humidity-out-circle", "className"),
      Output("par-alarm", "children"),
      Output("par-berita", "children"),
+     Output("par-circle", "className"),
      Output("co2-alarm", "children"),
      Output("co2-berita", "children"),
+     Output("co2-circle", "className"),
      Output("windspeed-alarm", "children"),
      Output("windspeed-berita", "children"),
+     Output("windspeed-circle", "className"),
      Output("rainfall-alarm", "children"),
-     Output("rainfall-berita", "children")],
+     Output("rainfall-berita", "children"),
+     Output("rainfall-circle", "className"),
+     Output("voltage-ac-alarm", "children"),
+     Output("voltage-ac-berita", "children"),
+     Output("voltage-ac-circle", "className"),
+     Output("current-ac-alarm", "children"),
+     Output("current-ac-berita", "children"),
+     Output("current-ac-circle", "className"),
+     Output("power-ac-alarm", "children"),
+     Output("power-ac-berita", "children"),
+     Output("power-ac-circle", "className")],
     [Input("interval-alarm", "n_intervals")]
 )
-def update_alarm_values(n):    
-    # print(alarm_data['kodeAlarmSuhuIn'])
+def update_alarm_values(n):
+    def get_circle_class(kode_alarm):
+        if kode_alarm in [1, 4]:
+            return "status-circle status-red"
+        elif kode_alarm in [2, 3]:
+            return "status-circle status-yellow"
+        elif kode_alarm == 0:
+            return "status-circle status-green"
+        else:  # kode_alarm == 0
+            return "status-circle status-black"
+    
     return (
-        alarm_data['kodeAlarmSuhuIn'],
-        alarm_data['beritaSuhuIn'],
-        alarm_data['kodeAlarmKelembabanIn'],
-        alarm_data['beritaKelembabanIn'],
-        alarm_data['kodeAlarmSuhuOut'],
-        alarm_data['beritaSuhuOut'],
-        alarm_data['kodeAlarmKelembabanOut'],
-        alarm_data['beritaKelembabanOut'],
-        alarm_data['kodeAlarmPar'],
-        alarm_data['beritaPar'],
-        alarm_data['kodeAlarmCo2'],
-        alarm_data['beritaCo2'],
-        alarm_data['kodeAlarmWindspeed'],
-        alarm_data['beritaWindspeed'],
-        alarm_data['kodeAlarmRainfall'],
-        alarm_data['beritaRainfall']
+        alarm_data['kodeAlarm0211'],
+        alarm_data['berita0211'],
+        get_circle_class(alarm_data['kodeAlarm0211']),
+        alarm_data['kodeAlarm0212'],
+        alarm_data['berita0212'],
+        get_circle_class(alarm_data['kodeAlarm0212']),
+        alarm_data['kodeAlarm0711'],
+        alarm_data['berita0711'],
+        get_circle_class(alarm_data['kodeAlarm0711']),
+        alarm_data['kodeAlarm0712'],
+        alarm_data['berita0712'],
+        get_circle_class(alarm_data['kodeAlarm0712']),
+        alarm_data['kodeAlarm0611'],
+        alarm_data['berita0611'],
+        get_circle_class(alarm_data['kodeAlarm0611']),
+        alarm_data['kodeAlarm0311'],
+        alarm_data['berita0311'],
+        get_circle_class(alarm_data['kodeAlarm0311']),
+        alarm_data['kodeAlarm0411'],
+        alarm_data['berita0411'],
+        get_circle_class(alarm_data['kodeAlarm0411']),
+        alarm_data['kodeAlarm0511'],
+        alarm_data['berita0511'],
+        get_circle_class(alarm_data['kodeAlarm0511']),
+        alarm_data['kodeAlarm0911'],
+        alarm_data['berita0911'],
+        get_circle_class(alarm_data['kodeAlarm0911']),
+        alarm_data['kodeAlarm0912'],
+        alarm_data['berita0912'],
+        get_circle_class(alarm_data['kodeAlarm0912']),
+        alarm_data['kodeAlarm0913'],
+        alarm_data['berita0913'],
+        get_circle_class(alarm_data['kodeAlarm0913'])
     )
+
+# Callback for prediction graphs temperature and humidity indoor
+@app_dash.callback(
+    [Output('temp-prediction-graph', 'figure'),
+     Output('humidity-prediction-graph', 'figure')],
+    [Input('interval_thin', 'n_intervals')]
+)
+def update_th_in_prediction_graphs(n):
+# Temperature prediction graph
+    temp_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        temp_predictions = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        # Using kodeData0213 to kodeData0217 for temperature predictions
+        temp_codes = ['kodeData0213', 'kodeData0214', 'kodeData0215', 'kodeData0216', 'kodeData0217']
+        
+        for i, pred_key in enumerate(temp_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                temp_predictions.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                temp_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Temp predictions: {temp_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, temp_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            temp_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            temp_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            temp_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    temp_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="°C",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    # Humidity prediction graph
+    humidity_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        humidity_predictions = []
+
+        # Create timestamps and get prediction values for next 1-5 minutes
+        humidity_codes = ['kodeData0218', 'kodeData0219', 'kodeData0220', 'kodeData0221', 'kodeData0222']
+        
+        for i, pred_key in enumerate(humidity_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                humidity_predictions.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                humidity_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Humidity future times: {future_times}")
+        print(f"Humidity predictions: {humidity_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, humidity_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            humidity_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            humidity_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            humidity_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    humidity_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="%",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return temp_fig, humidity_fig
+
+# Callback for prediction graphs temperature and humidity outdoor
+@app_dash.callback(
+    [Output('temp-prediction-out-graph', 'figure'),
+     Output('humidity-prediction-out-graph', 'figure')],
+    [Input('interval_thout', 'n_intervals')]
+)
+def update_th_out_prediction_graphs(n):
+    # Temperature prediction graph
+    temp_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        temp_predictions = []
+
+        # Create timestamps and get prediction values for next 1-5 minutes
+        temp_codes = ['kodeData0713', 'kodeData0714', 'kodeData0715', 'kodeData0716', 'kodeData0717']
+        # Using kodeData0713 to kodeData0717 for temperature predictions
+        for i, pred_key in enumerate(temp_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                temp_predictions.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                temp_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Temp predictions: {temp_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, temp_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            temp_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            temp_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            temp_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Temperature Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    temp_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="°C",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    # Humidity prediction graph
+    humidity_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        humidity_predictions = []
+
+        # Create timestamps and get prediction values for next 1-5 minutes
+        humidity_codes = ['kodeData0718', 'kodeData0719', 'kodeData0720', 'kodeData0721', 'kodeData0722']
+        
+        for i, pred_key in enumerate(humidity_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                humidity_predictions.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                humidity_predictions.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Humidity future times: {future_times}")
+        print(f"Humidity predictions: {humidity_predictions}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, humidity_predictions) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            humidity_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            humidity_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            humidity_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Humidity Prediction',
+                line=dict(color='blue', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    humidity_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="%",
+        height=97,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return temp_fig, humidity_fig
+
+# Callback for prediction graphs co2
+@app_dash.callback(
+    Output('co2-prediction-graph', 'figure'),
+    [Input('interval_co2', 'n_intervals')]
+)
+def update_co2_prediction_graphs(n):
+    # Temperature prediction graph
+    co2_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        co2_prediction = []
+
+        # Create timestamps and get prediction values for next 1-5 minutes
+        co2_codes = ['kodeData0312', 'kodeData0313', 'kodeData0314', 'kodeData0315', 'kodeData0316']
+        
+        for i, pred_key in enumerate(co2_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                co2_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                co2_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"CO2 predictions: {co2_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, co2_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            co2_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='CO2 Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            co2_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            co2_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='CO2 Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    co2_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="PPM",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return co2_fig
+
+# Callback for prediction graphs par
+@app_dash.callback(
+    Output('par-prediction-graph', 'figure'),
+    [Input('interval_par', 'n_intervals')]
+)
+def update_par_prediction_graphs(n):
+    # Temperature prediction graph
+    par_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        par_prediction = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        par_codes = ['kodeData0612', 'kodeData0613', 'kodeData0614', 'kodeData0615', 'kodeData0616']
+        
+        for i, pred_key in enumerate(par_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                par_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                par_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"PAR predictions: {par_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, par_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            par_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='PAR Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            par_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            par_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='PAR Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    par_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="μmol/m²/s",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return par_fig
+
+# Callback for prediction graphs windspeed
+@app_dash.callback(
+    Output('windspeed-prediction-graph', 'figure'),
+    [Input('interval_windspeed', 'n_intervals')]
+)
+def update_windspeed_prediction_graphs(n):
+    # Temperature prediction graph
+    windspeed_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        windspeed_prediction = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        windspeed_codes = ['kodeData0412', 'kodeData0413', 'kodeData0414', 'kodeData0415', 'kodeData0416']
+        
+        for i, pred_key in enumerate(windspeed_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                windspeed_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                windspeed_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Windspeed predictions: {windspeed_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, windspeed_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            windspeed_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Windspeed Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            windspeed_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            windspeed_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Windspeed Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    windspeed_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="m/s",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return windspeed_fig
+
+# Callback for prediction graphs rainfall
+@app_dash.callback(
+    Output('rainfall-prediction-graph', 'figure'),
+    [Input('interval_rainfall', 'n_intervals')]
+)
+def update_rainfall_prediction_graphs(n):
+    # Temperature prediction graph
+    rainfall_fig = go.Figure()
+    
+    if data['waktu'] and len(data['waktu']) > 0:
+        # Get the last timestamp and ensure it's a proper datetime
+        last_time = data['waktu'][-1]
+        
+        # Convert to pandas datetime if it's not already
+        if not isinstance(last_time, pd.Timestamp):
+            last_time = pd.to_datetime(last_time)
+        
+        future_times = []
+        rainfall_prediction = []
+        
+        # Create timestamps and get prediction values for next 1-5 minutes
+        rainfall_codes = ['kodeData0512', 'kodeData0513', 'kodeData0514', 'kodeData0515', 'kodeData0516']
+        
+        for i, pred_key in enumerate(rainfall_codes, 1):
+            # Use datetime arithmetic instead of pd.Timedelta
+            future_time = last_time + pd.Timedelta(minutes=i)
+            future_times.append(future_time)
+            
+            # Get the latest prediction value for each minute ahead
+            if pred_key in prediction_data and prediction_data[pred_key] and len(prediction_data[pred_key]) > 0:
+                rainfall_prediction.append(prediction_data[pred_key][-1])
+            else:
+                # Use a reasonable default or interpolation
+                rainfall_prediction.append(None)
+        
+        # Debug: Print the values to check
+        print(f"Future times: {future_times}")
+        print(f"Rainfall predictions: {rainfall_prediction}")
+        
+        # Only plot if we have prediction data
+        valid_predictions = [(t, p) for t, p in zip(future_times, rainfall_prediction) if p is not None]
+        
+        if valid_predictions and len(valid_predictions) > 2:
+            times, preds = zip(*valid_predictions)
+            
+            # Apply smoothing using np.linspace approach similar to PAR callback
+            num_points = len(valid_predictions)
+            
+            # Create evenly spaced indices
+            indices = np.linspace(0, num_points-1, num_points, dtype=int)
+            
+            # Get the selected timestamps and prediction values
+            selected_timestamps = [times[i] for i in indices]
+            selected_values = [preds[i] for i in indices]
+            
+            # Create x values for plotting
+            x_plot = list(range(num_points))
+            
+            rainfall_fig.add_trace(go.Scatter(
+                x=x_plot,
+                y=selected_values,
+                mode='lines+markers',
+                name='Rainfall Prediction',
+                line=dict(color='red', width=2, shape='spline', smoothing=1.3),
+                marker=dict(size=6),
+                connectgaps=False,
+                showlegend=False
+            ))
+            
+            # Update layout with custom x-axis labels
+            rainfall_fig.update_layout(
+                xaxis=dict(
+                    title="Time",
+                    tickmode='array',
+                    tickvals=x_plot,
+                    ticktext=[t.strftime('%H:%M') for t in selected_timestamps],
+                    tickangle=0,
+                    showgrid=True,
+                    gridcolor='lightgray'
+                )
+            )
+        elif valid_predictions:
+            # Fallback for insufficient data points
+            times, preds = zip(*valid_predictions)
+            rainfall_fig.add_trace(go.Scatter(
+                x=list(times),
+                y=list(preds),
+                mode='lines+markers',
+                name='Rainfall Prediction',
+                line=dict(color='red', width=2),
+                marker=dict(size=6),
+                connectgaps=False
+            ))
+    
+    rainfall_fig.update_layout(
+        title="",
+        xaxis_title="Time",
+        yaxis_title="mm",
+        height=258,
+        margin=dict(l=40, r=20, t=20, b=40),
+        showlegend=False,
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return rainfall_fig
+
+# Callback BARU untuk mengupdate tabel historis th indoor
+@app_dash.callback(
+    Output('historical-table-th-in', 'data'),
+    Input('interval_thin', 'n_intervals')
+)
+def update_historical_table_thin(n):    
+    # Panggil fungsi untuk mengambil dan mem-parsing data
+    df = fetch_and_parse_esp_data()
+    
+    # Jika DataFrame kosong (karena error atau tidak ada data), kembalikan list kosong
+    if df.empty:
+        return []
+        
+    # Pilih hanya kolom yang kita butuhkan untuk tabel T&H Indoor
+    # Pastikan nama kolom ini SAMA PERSIS dengan header di file log.csv Anda
+    try:
+        df_selected = df[['Waktu', 'Suhu Indoor', 'Kelembaban Indoor']]
+    except KeyError as e:
+        print(f"Error: Kolom tidak ditemukan di CSV -> {e}. Pastikan nama kolom di file log.csv sudah benar.")
+        return []
+
+    # Ganti nama kolom agar sesuai dengan 'id' di komponen dash_table.DataTable
+    df_renamed = df_selected.rename(columns={
+        'Waktu': 'time',
+        'Suhu Indoor': 'temperature_in_historical',
+        'Kelembaban Indoor': 'humidity_in_historical'
+    })
+    
+    # Urutkan data berdasarkan waktu (terbaru di atas)
+    try:
+        # Coba konversi ke datetime untuk pengurutan yang lebih akurat
+        df_renamed['time'] = pd.to_datetime(df_renamed['time'])
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+        # Format kembali ke string jika diperlukan oleh Dash Table
+        df_sorted['time'] = df_sorted['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        # Jika format waktu tidak standar, urutkan sebagai string saja
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+
+    
+    # Batasi hanya 50 baris data terbaru untuk ditampilkan agar tidak berat
+    df_limited = df_sorted.head(50)
+    
+    # Ubah DataFrame menjadi format yang bisa dibaca oleh dash_table (list of dicts)
+    return df_limited.to_dict('records')
+
+# Callback BARU untuk mengupdate tabel historis th Outdoor
+@app_dash.callback(
+    Output('historical-table-th-out', 'data'),
+    Input('interval_thout', 'n_intervals')
+)
+def update_historical_table_thout(n):    
+    # Panggil fungsi untuk mengambil dan mem-parsing data
+    df = fetch_and_parse_esp_data()
+    
+    # Jika DataFrame kosong (karena error atau tidak ada data), kembalikan list kosong
+    if df.empty:
+        return []
+        
+    # Pilih hanya kolom yang kita butuhkan untuk tabel T&H Outdoor
+    # Pastikan nama kolom ini SAMA PERSIS dengan header di file log.csv Anda
+    try:
+        df_selected = df[['Waktu', 'Suhu Outdoor', 'Kelembaban Outdoor']]
+    except KeyError as e:
+        print(f"Error: Kolom tidak ditemukan di CSV -> {e}. Pastikan nama kolom di file log.csv sudah benar.")
+        return []
+
+    # Ganti nama kolom agar sesuai dengan 'id' di komponen dash_table.DataTable
+    df_renamed = df_selected.rename(columns={
+        'Waktu': 'time',
+        'Suhu Outdoor': 'temperature_out_historical',
+        'Kelembaban Outdoor': 'humidity_out_historical'
+    })
+    
+    # Urutkan data berdasarkan waktu (terbaru di atas)
+    try:
+        # Coba konversi ke datetime untuk pengurutan yang lebih akurat
+        df_renamed['time'] = pd.to_datetime(df_renamed['time'])
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+        # Format kembali ke string jika diperlukan oleh Dash Table
+        df_sorted['time'] = df_sorted['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        # Jika format waktu tidak standar, urutkan sebagai string saja
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+
+    
+    # Batasi hanya 50 baris data terbaru untuk ditampilkan agar tidak berat
+    df_limited = df_sorted.head(50)
+    
+    # Ubah DataFrame menjadi format yang bisa dibaca oleh dash_table (list of dicts)
+    return df_limited.to_dict('records')
+
+# Callback BARU untuk mengupdate tabel historis co2
+@app_dash.callback(
+    Output('historical-table-co2', 'data'),
+    Input('interval_co2', 'n_intervals')
+)
+def update_historical_table_co2(n):    
+    # Panggil fungsi untuk mengambil dan mem-parsing data
+    df = fetch_and_parse_esp_data()
+    
+    # Jika DataFrame kosong (karena error atau tidak ada data), kembalikan list kosong
+    if df.empty:
+        return []
+        
+    # Pilih hanya kolom yang kita butuhkan untuk tabel T&H Indoor
+    # Pastikan nama kolom ini SAMA PERSIS dengan header di file log.csv Anda
+    try:
+        df_selected = df[['Waktu', 'CO2']]
+    except KeyError as e:
+        print(f"Error: Kolom tidak ditemukan di CSV -> {e}. Pastikan nama kolom di file log.csv sudah benar.")
+        return []
+
+    # Ganti nama kolom agar sesuai dengan 'id' di komponen dash_table.DataTable
+    df_renamed = df_selected.rename(columns={
+        'Waktu': 'time',
+        'CO2': 'co2-historical'
+    })
+    
+    # Urutkan data berdasarkan waktu (terbaru di atas)
+    try:
+        # Coba konversi ke datetime untuk pengurutan yang lebih akurat
+        df_renamed['time'] = pd.to_datetime(df_renamed['time'])
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+        # Format kembali ke string jika diperlukan oleh Dash Table
+        df_sorted['time'] = df_sorted['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        # Jika format waktu tidak standar, urutkan sebagai string saja
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+
+    
+    # Batasi hanya 50 baris data terbaru untuk ditampilkan agar tidak berat
+    df_limited = df_sorted.head(50)
+    
+    # Ubah DataFrame menjadi format yang bisa dibaca oleh dash_table (list of dicts)
+    return df_limited.to_dict('records')
+
+# Callback BARU untuk mengupdate tabel historis windspeed
+@app_dash.callback(
+    Output('historical-table-windspeed', 'data'),
+    Input('interval_windspeed', 'n_intervals')
+)
+def update_historical_table_windspeed(n):    
+    # Panggil fungsi untuk mengambil dan mem-parsing data
+    df = fetch_and_parse_esp_data()
+    
+    # Jika DataFrame kosong (karena error atau tidak ada data), kembalikan list kosong
+    if df.empty:
+        return []
+        
+    # Pilih hanya kolom yang kita butuhkan untuk tabel T&H Indoor
+    # Pastikan nama kolom ini SAMA PERSIS dengan header di file log.csv Anda
+    try:
+        df_selected = df[['Waktu', 'Kecepatan Angin']]
+    except KeyError as e:
+        print(f"Error: Kolom tidak ditemukan di CSV -> {e}. Pastikan nama kolom di file log.csv sudah benar.")
+        return []
+
+    # Ganti nama kolom agar sesuai dengan 'id' di komponen dash_table.DataTable
+    df_renamed = df_selected.rename(columns={
+        'Waktu': 'time',
+        'Kecepatan Angin': 'windspeed-historical'
+    })
+    
+    # Urutkan data berdasarkan waktu (terbaru di atas)
+    try:
+        # Coba konversi ke datetime untuk pengurutan yang lebih akurat
+        df_renamed['time'] = pd.to_datetime(df_renamed['time'])
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+        # Format kembali ke string jika diperlukan oleh Dash Table
+        df_sorted['time'] = df_sorted['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        # Jika format waktu tidak standar, urutkan sebagai string saja
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+
+    
+    # Batasi hanya 50 baris data terbaru untuk ditampilkan agar tidak berat
+    df_limited = df_sorted.head(50)
+    
+    # Ubah DataFrame menjadi format yang bisa dibaca oleh dash_table (list of dicts)
+    return df_limited.to_dict('records')
+
+# Callback BARU untuk mengupdate tabel historis rainfall
+@app_dash.callback(
+    Output('historical-table-rainfall', 'data'),
+    Input('interval_rainfall', 'n_intervals')
+)
+def update_historical_table_rainfall(n):    
+    # Panggil fungsi untuk mengambil dan mem-parsing data
+    df = fetch_and_parse_esp_data()
+    
+    # Jika DataFrame kosong (karena error atau tidak ada data), kembalikan list kosong
+    if df.empty:
+        return []
+        
+    # Pilih hanya kolom yang kita butuhkan untuk tabel T&H Indoor
+    # Pastikan nama kolom ini SAMA PERSIS dengan header di file log.csv Anda
+    try:
+        df_selected = df[['Waktu', 'Curah Hujan']]
+    except KeyError as e:
+        print(f"Error: Kolom tidak ditemukan di CSV -> {e}. Pastikan nama kolom di file log.csv sudah benar.")
+        return []
+
+    # Ganti nama kolom agar sesuai dengan 'id' di komponen dash_table.DataTable
+    df_renamed = df_selected.rename(columns={
+        'Waktu': 'time',
+        'Curah Hujan': 'rainfall-historical'
+    })
+    
+    # Urutkan data berdasarkan waktu (terbaru di atas)
+    try:
+        # Coba konversi ke datetime untuk pengurutan yang lebih akurat
+        df_renamed['time'] = pd.to_datetime(df_renamed['time'])
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+        # Format kembali ke string jika diperlukan oleh Dash Table
+        df_sorted['time'] = df_sorted['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        # Jika format waktu tidak standar, urutkan sebagai string saja
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+
+    
+    # Batasi hanya 50 baris data terbaru untuk ditampilkan agar tidak berat
+    df_limited = df_sorted.head(50)
+    
+    # Ubah DataFrame menjadi format yang bisa dibaca oleh dash_table (list of dicts)
+    return df_limited.to_dict('records')
+
+# Callback BARU untuk mengupdate tabel historis PAR
+@app_dash.callback(
+    Output('historical-table-par', 'data'),
+    Input('interval_par', 'n_intervals')
+)
+def update_historical_table_par(n):    
+    # Panggil fungsi untuk mengambil dan mem-parsing data
+    df = fetch_and_parse_esp_data()
+    
+    # Jika DataFrame kosong (karena error atau tidak ada data), kembalikan list kosong
+    if df.empty:
+        return []
+        
+    # Pilih hanya kolom yang kita butuhkan untuk tabel T&H Indoor
+    # Pastikan nama kolom ini SAMA PERSIS dengan header di file log.csv Anda
+    try:
+        df_selected = df[['Waktu', 'PAR']]
+    except KeyError as e:
+        print(f"Error: Kolom tidak ditemukan di CSV -> {e}. Pastikan nama kolom di file log.csv sudah benar.")
+        return []
+
+    # Ganti nama kolom agar sesuai dengan 'id' di komponen dash_table.DataTable
+    df_renamed = df_selected.rename(columns={
+        'Waktu': 'time',
+        'PAR': 'par-historical'
+    })
+    
+    # Urutkan data berdasarkan waktu (terbaru di atas)
+    try:
+        # Coba konversi ke datetime untuk pengurutan yang lebih akurat
+        df_renamed['time'] = pd.to_datetime(df_renamed['time'])
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+        # Format kembali ke string jika diperlukan oleh Dash Table
+        df_sorted['time'] = df_sorted['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        # Jika format waktu tidak standar, urutkan sebagai string saja
+        df_sorted = df_renamed.sort_values(by='time', ascending=False)
+
+    
+    # Batasi hanya 50 baris data terbaru untuk ditampilkan agar tidak berat
+    df_limited = df_sorted.head(50)
+    
+    # Ubah DataFrame menjadi format yang bisa dibaca oleh dash_table (list of dicts)
+    return df_limited.to_dict('records')
 
 # Run server
 if __name__ == '__main__':
-    server.run(debug=True)
+    server.run(debug=True, host='0.0.0.0')

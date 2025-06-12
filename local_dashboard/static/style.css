@@ -14,55 +14,75 @@
     --border-radius: 16px;
   }
   
-  /* Global Styles */
-  body {
-    background-color: var(--background);
-    font-family: 'Segoe UI', 'Arial', sans-serif;
-    color: var(--text-primary);
-    margin: 0;
-    padding: 0;
-  }
-  
-  /* Navbar Styling */
-  .navbar-full {
-    width: 100%;
-    background-color: var(--card-bg);
-    box-shadow: 8px 8px 12px var(--shadow-dark), 
-                -8px -8px 12px var(--shadow-light);
-    border: none !important;
-    padding: 15px 20px !important;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    /* margin-bottom: 1.5rem; */
-  }
-  
-  .navbar-title {
-    flex-grow: 1;
-    text-align: center;
-    font-size: 1.6rem;
-    font-weight: bold;
-    color: var(--text-primary);
-    text-shadow: 1px 1px 2px var(--shadow-light);
-    letter-spacing: 1px;
-  }
-  
-  .notification-icon, .gps-icon {
-    width: 40px;
-    height: 40px;
-    padding: 8px;
-    border-radius: 50%;
-    box-shadow: 4px 4px 8px var(--shadow-dark),
-                -4px -4px 8px var(--shadow-light);
-    background-color: var(--card-bg);
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-  
-  .notification-icon:hover, .gps-icon:hover {
-    box-shadow: inset 3px 3px 5px var(--shadow-dark),
-                inset -3px -3px 5px var(--shadow-light);
-  }
+/* Global Styles */
+body {
+  background-color: var(--background);
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar Styling */
+.navbar-full {
+  width: 100%;
+  background-color: var(--card-bg);
+  box-shadow: 8px 8px 12px var(--shadow-dark), 
+              -8px -8px 12px var(--shadow-light);
+  border: none !important;
+  padding: 15px 20px !important;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  /* margin-bottom: 1.5rem; */
+}
+
+.navbar-title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  text-shadow: 1px 1px 2px var(--shadow-light);
+  letter-spacing: 1px;
+}
+
+/* Navbar Logo Styling */
+.navbar-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  padding: 8px;
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.navbar-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 6px 6px 10px var(--shadow-dark),
+              -6px -6px 10px var(--shadow-light);
+}
+
+.notification-icon, .gps-icon {
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border-radius: 50%;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+  background-color: var(--card-bg);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.notification-icon:hover, .gps-icon:hover {
+  box-shadow: inset 3px 3px 5px var(--shadow-dark),
+              inset -3px -3px 5px var(--shadow-light);
+}
 
 /* Map Container Styling */
 .map-card {
@@ -111,436 +131,628 @@
   justify-content: space-between;
   gap: 1rem;
 }
+
+/* Status Circle Styling */
+.title-with-circle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.status-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.status-red {
+  background-color: #e74c3c;
+  box-shadow: 0 0 6px rgba(231, 76, 60, 0.5);
+}
+
+.status-yellow {
+  background-color: #f39c12;
+  box-shadow: 0 0 6px rgba(243, 156, 18, 0.5);
+}
+
+.status-green {
+  background-color: #2ecc71;
+  box-shadow: 0 0 6px rgba(46, 204, 113, 0.5);
+}
+
+.status-black {
+  background-color: #2c2c2c;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
+}
   
-  /* Parameter Cards Styling */
-  .param-card, .parameter-card {
-    background-color: var(--card-bg);
-    border-radius: var(--border-radius);
-    padding: 20px;
-    box-shadow: 8px 8px 12px var(--shadow-dark),
-                -8px -8px 12px var(--shadow-light);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 0.8rem;
-    transition: all 0.3s ease;
-    border: none !important;
-    margin-bottom: 1rem;
+/* Parameter Cards Styling */
+.param-card, .parameter-card {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: 8px 8px 12px var(--shadow-dark),
+              -8px -8px 12px var(--shadow-light);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+  border: none !important;
+  margin-bottom: 1rem;
+}
+
+.param-card:hover, .parameter-card:hover {
+  transform: translateY(-3px);
+}
+
+.param-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.param-icon, .param-icon-large {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  padding: 8px;
+  border-radius: 50%;
+  background-color: var(--card-bg);
+  box-shadow: 3px 3px 6px var(--shadow-dark),
+              -3px -3px 6px var(--shadow-light);
+  transition: all 0.2s ease;
+}
+
+.param-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+/* Parameter stacked icon container */
+.param-icon-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Parameter-card specific styling (th_in.py) */
+.parameter-card h5 {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.parameter-card h3 {
+  color: var(--accent);
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-top: 0.8rem;
+}
+
+/* Custom alignment for parameter cards */
+.d-flex.align-items-center {
+  gap: 0.75rem;
+}
+
+/* Prediction Container Styling */
+.prediction-container {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: 8px 8px 12px var(--shadow-dark),
+              -8px -8px 12px var(--shadow-light);
+  margin-bottom: 1.5rem;
+  border: none !important;
+}
+
+.prediction-container h5 {
+  color: var(--prediction-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 2px var(--shadow-light);
+  margin-bottom: 1.5rem;
+}
+
+.prediction-container h6 {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+/* Greenhouse Image Container */
+.greenhouse-img, .greenhouse-container img {
+  width: 100%;
+  height: 350px;
+  object-fit: auto;
+  border-radius: var(--border-radius);
+  box-shadow: 6px 6px 12px var(--shadow-dark),
+              -6px -6px 12px var(--shadow-light);
+  padding: 10px;
+  background-color: var(--card-bg);
+  transition: all 0.3s ease;
+}
+
+.greenhouse-container {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.img-fluid.w-100.border.border-primary {
+  border: none !important;
+  box-shadow: 6px 6px 12px var(--shadow-dark),
+              -6px -6px 12px var(--shadow-light);
+}
+
+/* Data Table and Historical Table Styling */
+.data-table, 
+.historical-table, 
+.dash-table-container,
+.mb-3.p-2.border.rounded.bg-light {
+  background-color: var(--card-bg) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 18px !important;
+  box-shadow: 8px 8px 12px var(--shadow-dark),
+              -8px -8px 12px var(--shadow-light) !important;
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border: none !important;
+}
+
+/* Table header styling for real-time table */
+.data-table h4, 
+.historical-table h5, 
+.mb-3.p-2.border.rounded.bg-light h5 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-shadow: 1px 1px 2px var(--shadow-light);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* DataTable styling for all dash tables */
+.dash-table-container .dash-spreadsheet-container {
+  font-family: 'Segoe UI', sans-serif !important;
+}
+
+.dash-spreadsheet-container .dash-spreadsheet-inner th {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  font-weight: bold;
+  padding: 12px 15px !important;
+  border-bottom: 1px solid var(--shadow-dark);
+  text-align: center !important;
+  font-size: 0.9rem;
+}
+
+.dash-spreadsheet-container .dash-spreadsheet-inner td {
+  padding: 10px 15px !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(163, 177, 198, 0.2);
+}
+
+.dash-spreadsheet-container .dash-spreadsheet-inner tr:nth-child(even) td {
+  background-color: #ebeef3 !important;
+}
+
+/* Button Styling */
+.btn {
+  display: inline-flex;
+  padding: 10px 18px;
+  font-weight: 500;
+  border-radius: 12px; 
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: none;
+  box-shadow: 5px 5px 10px var(--shadow-dark),
+              -5px -5px 10px var(--shadow-light);
+  transition: all 0.3s ease;
+  margin: 5px;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+}
+
+.btn:hover {
+  box-shadow: 3px 3px 6px var(--shadow-dark),
+              -3px -3px 6px var(--shadow-light);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  box-shadow: inset 2px 2px 5px var(--shadow-dark),
+              inset -2px -2px 5px var(--shadow-light);
+  transform: translateY(0px);
+}
+
+.btn-secondary {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.btn-dark {
+  background-color: #343a40;
+  color: white;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.25),
+              -4px -4px 8px rgba(255, 255, 255, 0.1);
+}
+
+.btn-dark:hover {
+  background-color: #23272b;
+}
+
+/* Footer Styling */
+.footer-section {
+  background-color: var(--card-bg);
+  margin-top: 40px;
+  padding: 20px 0;
+  box-shadow: inset 0 4px 8px var(--shadow-dark),
+              inset 0 -4px 8px var(--shadow-light);
+  border-top: 1px solid rgba(163, 177, 198, 0.2);
+}
+
+.footer-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 2px var(--shadow-light);
+  opacity: 0.9;
+}
+
+.love-symbol {
+  color: var(--danger); 
+  font-size: 1.1rem;
+  display: inline-block; 
+  animation: heartbeat 1.5s ease-in-out infinite;
+  text-shadow: 0 0 4px rgba(231, 76, 60, 0.3);
+  transform-origin: center; 
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1.2); }
+  75% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Graph Container Styling */
+#temp-graph, #humidity-graph, #temp-graph-out, #humidity-graph-out, #windspeed-graph,
+  #co2-graph, #par-graph, #rainfall-graph {
+  background-color: var(--card-bg);
+  border-radius: calc(var(--border-radius) - 4px);
+  box-shadow: inset 4px 4px 8px var(--shadow-dark),
+              inset -4px -4px 8px var(--shadow-light);
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+/* Plot background colors */
+.js-plotly-plot .plotly .main-svg {
+  background-color: transparent !important;
+}
+
+/* Graph lines */
+.js-plotly-plot .plotly .traces .scatter .lines path {
+  stroke-width: 2.5px !important;
+}
+
+/* Temperature line */
+.js-plotly-plot .plotly #temp-graph .traces .scatter:nth-child(1) .lines path {
+  stroke: #e74c3c !important;
+}
+
+/* Humidity line */
+.js-plotly-plot .plotly #humidity-graph .traces .scatter:nth-child(1) .lines path {
+  stroke: #3498db !important;
+}
+
+/* Main Dashboard Container */
+.dashboard-container {
+  background-color: var(--background);
+  min-height: 100vh;
+  padding-bottom: 30px;
+}
+
+/* Grid spacing */
+.container {
+  padding: 15px;
+}
+
+/* Bottom spacing for grid */
+.bottom-grid-col {
+  padding-left: 0.25rem !important;
+  padding-right: 0.25rem !important;
+  margin: 0 0.15rem;
+  flex: 1;
+}
+
+/* Fix for bootstrap row gutters */
+.g-2 {
+  --bs-gutter-x: 0.75rem;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .navbar-title {
+    font-size: 1.4rem;
   }
-  
-  .param-card:hover, .parameter-card:hover {
-    transform: translateY(-3px);
+
+  .navbar-logo {
+    width: 45px;
+    height: 45px;
+    padding: 6px;
   }
   
   .param-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin: 0;
+    font-size: 0.95rem;
   }
   
-  .param-icon, .param-icon-large {
-    width: 38px;
-    height: 38px;
-    object-fit: contain;
-    padding: 8px;
-    border-radius: 50%;
-    background-color: var(--card-bg);
-    box-shadow: 3px 3px 6px var(--shadow-dark),
-                -3px -3px 6px var(--shadow-light);
-    transition: all 0.2s ease;
+  .param-value, .parameter-card h3 {
+    font-size: 1.3rem;
   }
   
-  .param-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--accent);
+  .map-container {
+    height: 400px;
   }
-  
-  /* Parameter stacked icon container */
-  .param-icon-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  /* Parameter-card specific styling (th_in.py) */
-  .parameter-card h5 {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  
-  .parameter-card h3 {
-    color: var(--accent);
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-top: 0.8rem;
-  }
-  
-  /* Custom alignment for parameter cards */
-  .d-flex.align-items-center {
-    gap: 0.75rem;
-  }
-  
-  /* Greenhouse Image Container */
+
   .greenhouse-img, .greenhouse-container img {
-    width: 100%;
-    height: 350px;
-    object-fit: auto;
-    border-radius: var(--border-radius);
-    box-shadow: 6px 6px 12px var(--shadow-dark),
-                -6px -6px 12px var(--shadow-light);
-    padding: 10px;
-    background-color: var(--card-bg);
-    transition: all 0.3s ease;
+    height: 300px;
   }
   
-  .greenhouse-container {
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-  }
-  
-  .img-fluid.w-100.border.border-primary {
-    border: none !important;
-    box-shadow: 6px 6px 12px var(--shadow-dark),
-                -6px -6px 12px var(--shadow-light);
-  }
-  
-  /* Data Table and Historical Table Styling */
-  .data-table, 
-  .historical-table, 
-  .dash-table-container,
-  .mb-3.p-2.border.rounded.bg-light {
-    background-color: var(--card-bg) !important;
-    border-radius: var(--border-radius) !important;
-    padding: 18px !important;
-    box-shadow: 8px 8px 12px var(--shadow-dark),
-                -8px -8px 12px var(--shadow-light) !important;
-    overflow-x: auto;
-    margin-bottom: 20px;
-    border: none !important;
-  }
-  
-  /* Table header styling for real-time table */
-  .data-table h4, 
-  .historical-table h5, 
-  .mb-3.p-2.border.rounded.bg-light h5 {
-    color: var(--text-primary);
-    font-weight: 600;
-    margin-bottom: 15px;
-    text-shadow: 1px 1px 2px var(--shadow-light);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  
-  /* DataTable styling for all dash tables */
-  .dash-table-container .dash-spreadsheet-container {
-    font-family: 'Segoe UI', sans-serif !important;
-  }
-  
-  .dash-spreadsheet-container .dash-spreadsheet-inner th {
-    background-color: var(--card-bg) !important;
-    color: var(--text-primary) !important;
-    font-weight: bold;
-    padding: 12px 15px !important;
-    border-bottom: 1px solid var(--shadow-dark);
-    text-align: center !important;
-    font-size: 0.9rem;
-  }
-  
-  .dash-spreadsheet-container .dash-spreadsheet-inner td {
-    padding: 10px 15px !important;
-    background-color: var(--card-bg) !important;
-    color: var(--text-primary) !important;
-    font-size: 0.9rem;
-    border-bottom: 1px solid rgba(163, 177, 198, 0.2);
-  }
-  
-  .dash-spreadsheet-container .dash-spreadsheet-inner tr:nth-child(even) td {
-    background-color: #ebeef3 !important;
-  }
-  
-  /* Button Styling */
   .btn {
-    display: inline-flex;
-    padding: 10px 18px;
-    font-weight: 500;
-    border-radius: 12px; 
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background-color: var(--card-bg);
-    color: var(--text-primary);
-    border: none;
-    box-shadow: 5px 5px 10px var(--shadow-dark),
-                -5px -5px 10px var(--shadow-light);
-    transition: all 0.3s ease;
-    margin: 5px;
-    text-decoration: none;
-    letter-spacing: 0.5px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+  
+  /* Adjust graph heights */
+  #temp-graph, #humidity-graph {
+    height: 140px !important;
+  }
+
+  .footer-text {
+    font-size: 0.85rem;
+  }
+
+  .prediction-container {
+    padding: 18px;
+  }
+  
+  .prediction-container h5 {
+    font-size: 1rem;
+  }
+  
+  .prediction-container h6 {
     font-size: 0.9rem;
   }
-  
-  .btn:hover {
-    box-shadow: 3px 3px 6px var(--shadow-dark),
-                -3px -3px 6px var(--shadow-light);
-    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .navbar-logo {
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+  }
+
+  .d-flex.justify-content-end, .d-flex.flex-wrap.justify-content-end {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn {
+    min-width: 120px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
   }
   
-  .btn:active {
-    box-shadow: inset 2px 2px 5px var(--shadow-dark),
-                inset -2px -2px 5px var(--shadow-light);
-    transform: translateY(0px);
-  }
-  
-  .btn-secondary {
-    background-color: var(--card-bg);
-    color: var(--text-primary);
-  }
-  
-  .btn-dark {
-    background-color: #343a40;
-    color: white;
-    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.25),
-                -4px -4px 8px rgba(255, 255, 255, 0.1);
-  }
-  
-  .btn-dark:hover {
-    background-color: #23272b;
-  }
-  
-  /* Graph Container Styling */
-  #temp-graph, #humidity-graph, #temp-graph-out, #humidity-graph-out, #windspeed-graph,
-   #co2-graph, #par-graph, #rainfall-graph {
-    background-color: var(--card-bg);
-    border-radius: calc(var(--border-radius) - 4px);
-    box-shadow: inset 4px 4px 8px var(--shadow-dark),
-                inset -4px -4px 8px var(--shadow-light);
-    padding: 12px;
+  .parameter-card, .param-card {
+    padding: 15px;
     margin-bottom: 15px;
   }
-  
-  /* Plot background colors */
-  .js-plotly-plot .plotly .main-svg {
-    background-color: transparent !important;
+
+  .map-container {
+    height: 350px;
   }
-  
-  /* Graph lines */
-  .js-plotly-plot .plotly .traces .scatter .lines path {
-    stroke-width: 2.5px !important;
+
+  .map-card {
+    padding: 15px;
   }
-  
-  /* Temperature line */
-  .js-plotly-plot .plotly #temp-graph .traces .scatter:nth-child(1) .lines path {
-    stroke: #e74c3c !important;
-  }
-  
-  /* Humidity line */
-  .js-plotly-plot .plotly #humidity-graph .traces .scatter:nth-child(1) .lines path {
-    stroke: #3498db !important;
-  }
-  
-  /* Main Dashboard Container */
-  .dashboard-container {
-    background-color: var(--background);
-    min-height: 100vh;
-    padding-bottom: 30px;
-  }
-  
-  /* Grid spacing */
-  .container {
+
+  .prediction-container {
     padding: 15px;
   }
   
-  /* Bottom spacing for grid */
-  .bottom-grid-col {
-    padding-left: 0.25rem !important;
-    padding-right: 0.25rem !important;
-    margin: 0 0.15rem;
-    flex: 1;
+  .prediction-container .mb-3.p-2.border.rounded.bg-light {
+    padding: 12px !important;
+    margin-bottom: 15px !important;
   }
   
-  /* Fix for bootstrap row gutters */
-  .g-2 {
-    --bs-gutter-x: 0.75rem;
+  .prediction-container h5 {
+    font-size: 0.95rem;
+    margin-bottom: 1.2rem;
   }
   
-  /* Responsive Design */
-  @media (max-width: 992px) {
-    .navbar-title {
-      font-size: 1.4rem;
-    }
-    
-    .param-title {
-      font-size: 0.95rem;
-    }
-    
-    .param-value, .parameter-card h3 {
-      font-size: 1.3rem;
-    }
-    
-    .map-container {
-      height: 400px;
-    }
+  .prediction-container h6 {
+    font-size: 0.85rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .greenhouse-container img, .greenhouse-img {
+    height: 250px !important;
+  }
+  
+  .parameter-card h3 {
+    font-size: 1.25rem;
+  }
+  
+  .parameter-card h5 {
+    font-size: 0.85rem;
+  }
+  
+  .navbar-title {
+    font-size: 1.15rem;
+  }
+  
+  .container {
+    padding: 10px;
+  }
+  
+  #temp-graph, #humidity-graph {
+    height: 125px !important;
+  }
+  
+  /* Adjust column layout */
+  .col-md-6 {
+    width: 100%;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  
+  /* Remove extra padding for mobile */
+  .pe-3, .ps-3 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 
-    .greenhouse-img, .greenhouse-container img {
-      height: 300px;
-    }
-    
-    .btn {
-      padding: 8px 16px;
-      font-size: 0.85rem;
-    }
-    
-    /* Adjust graph heights */
-    #temp-graph, #humidity-graph {
-      height: 140px !important;
-    }
+  .footer-text {
+    font-size: 0.8rem;
   }
-  
-  @media (max-width: 768px) {
-    .d-flex.justify-content-end, .d-flex.flex-wrap.justify-content-end {
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-  
-    .btn {
-      min-width: 120px;
-      margin-bottom: 10px;
-      font-size: 0.8rem;
-    }
-    
-    .parameter-card, .param-card {
-      padding: 15px;
-      margin-bottom: 15px;
-    }
 
-    .map-container {
-      height: 350px;
-    }
+  .footer-section {
+    padding: 15px 0;
+  }
+}
 
-    .map-card {
-      padding: 15px;
-    }
-    
-    .greenhouse-container img, .greenhouse-img {
-      height: 250px !important;
-    }
-    
-    .parameter-card h3 {
-      font-size: 1.25rem;
-    }
-    
-    .parameter-card h5 {
-      font-size: 0.85rem;
-    }
-    
-    .navbar-title {
-      font-size: 1.15rem;
-    }
-    
-    .container {
-      padding: 10px;
-    }
-    
-    #temp-graph, #humidity-graph {
-      height: 125px !important;
-    }
-    
-    /* Adjust column layout */
-    .col-md-6 {
-      width: 100%;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
-    }
-    
-    /* Remove extra padding for mobile */
-    .pe-3, .ps-3 {
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-    }
+@media (max-width: 576px) {
+  .navbar-logo {
+    width: 35px;
+    height: 35px;
+    padding: 4px;
   }
   
-  @media (max-width: 576px) {
-    .greenhouse-container img, .greenhouse-img {
-      height: 200px !important;
-    }
-    
-    .param-icon, .param-icon-large {
-      width: 30px;
-      height: 30px;
-      padding: 5px;
-    }
-    
-    .param-value, .parameter-card h3 {
-      font-size: 1.1rem;
-    }
-    
-    .param-title, .parameter-card h5 {
-      font-size: 0.8rem;
-    }
+  .greenhouse-container img, .greenhouse-img {
+    height: 200px !important;
+  }
+  
+  .param-icon, .param-icon-large {
+    width: 30px;
+    height: 30px;
+    padding: 5px;
+  }
+  
+  .param-value, .parameter-card h3 {
+    font-size: 1.1rem;
+  }
+  
+  .param-title, .parameter-card h5 {
+    font-size: 0.8rem;
+  }
 
-    .map-container {
-      height: 300px;
-    }
-    
-    .map-card {
-      padding: 10px;
-    }
-    
-    .navbar-title {
-      font-size: 1rem;
-    }
-    
-    #temp-graph, #humidity-graph {
-      height: 110px !important;
-    }
-    
-    /* Adjust button grid */
-    .d-flex.justify-content-end, .d-flex.flex-wrap.justify-content-end {
-      padding: 0;
-    }
-    
-    .btn {
-      padding: 8px 12px;
-      margin: 3px;
-      min-width: 105px;
-      font-size: 0.75rem;
-    }
-    
-    /* Specific fix for cards */
-    .row > * {
-      padding-right: 8px !important;
-      padding-left: 8px !important;
-    }
+  .map-container {
+    height: 300px;
   }
   
-  /* Animation for hover effects */
-  @keyframes softPulse {
-    0% {
-      box-shadow: 5px 5px 10px var(--shadow-dark),
-                  -5px -5px 10px var(--shadow-light);
-    }
-    50% {
-      box-shadow: 8px 8px 15px var(--shadow-dark),
-                  -8px -8px 15px var(--shadow-light);
-    }
-    100% {
-      box-shadow: 5px 5px 10px var(--shadow-dark),
-                  -5px -5px 10px var(--shadow-light);
-    }
+  .map-card {
+    padding: 10px;
   }
   
-  /* Add subtle animation to important elements */
-  .param-card:hover, .parameter-card:hover {
-    animation: softPulse 2s infinite;
+  .navbar-title {
+    font-size: 1rem;
   }
+  
+ .prediction-container {
+    padding: 12px;
+  }
+  
+  .prediction-container .mb-3.p-2.border.rounded.bg-light {
+    padding: 10px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .prediction-container h5 {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .prediction-container h6 {
+    font-size: 0.8rem;
+    margin-bottom: 0.6rem;
+  }
+
+  #temp-graph, #humidity-graph {
+    height: 110px !important;
+  }
+  
+  /* Adjust button grid */
+  .d-flex.justify-content-end, .d-flex.flex-wrap.justify-content-end {
+    padding: 0;
+  }
+  
+  .btn {
+    padding: 8px 12px;
+    margin: 3px;
+    min-width: 105px;
+    font-size: 0.75rem;
+  }
+  
+  /* Specific fix for cards */
+  .row > * {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+
+  .footer-text {
+    font-size: 0.75rem;
+  }
+
+  .footer-section {
+    padding: 12px 0;
+  }
+}
+
+/* Animation for hover effects */
+@keyframes softPulse {
+  0% {
+    box-shadow: 5px 5px 10px var(--shadow-dark),
+                -5px -5px 10px var(--shadow-light);
+  }
+  50% {
+    box-shadow: 8px 8px 15px var(--shadow-dark),
+                -8px -8px 15px var(--shadow-light);
+  }
+  100% {
+    box-shadow: 5px 5px 10px var(--shadow-dark),
+                -5px -5px 10px var(--shadow-light);
+  }
+}
+
+/* Add subtle animation to important elements */
+.param-card:hover, .parameter-card:hover {
+  animation: softPulse 2s infinite;
+}
