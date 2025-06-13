@@ -116,6 +116,7 @@ engineer_co2_layout = html.Div([
                     dcc.Link("T&H INDOOR", href="/dash/engineer/th-in", className="btn btn-secondary m-1"),
                     dcc.Link("T&H OUTDOOR", href="/dash/engineer/th-out", className="btn btn-secondary m-1"),
                     dcc.Link("WINDSPEED", href="/dash/engineer/windspeed", className="btn btn-secondary m-1"),
+                    dcc.Link("EPS", href="/dash/engineer/eps", className="btn btn-secondary m-1"),
                     html.Button("LOGOUT", id="logout-button", className="btn btn-dark m-1"),
                     dcc.Location(id="logout-redirect", refresh=True)  # Handles redirection
                 ], className="d-flex justify-content-end")

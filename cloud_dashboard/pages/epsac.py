@@ -1,19 +1,20 @@
 ''' 
- Nama File      : th_out.py
- Tanggal Update : 09 Juni 2025
+ Nama File      : eps_ac.py
+ Tanggal Update : 13 Juni 2025
  Dibuat oleh    : Ammar Aryan Nuha
  Penjelasan     : 
-    1. Membuat layout untuk halaman T&H Outdoor
+    1. Membuat layout untuk halaman EPS AC
     2. Menggunakan komponen Dash dan Bootstrap untuk tata letak yang responsif
-    3. Menyediakan grafik real-time, prediksi, dan tabel historis
+    3. Menyediakan grafik real-time dan tabel historis untuk parameter AC
     4. Menyediakan tombol navigasi untuk halaman lain
     5. Menggunakan interval untuk pembaruan data secara berkala
 '''
 
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
+import plotly.graph_objects as go
 
-th_out_layout = html.Div([
+eps_ac_layout = html.Div([
     # NAVBAR
     html.Div([
         html.Div(html.Img(src="/static/img/lpdp.png", className="navbar-logo")),
@@ -22,7 +23,7 @@ th_out_layout = html.Div([
         html.Div(html.Img(src="/static/img/polsub.png", className="navbar-logo")),
         html.Div(html.Img(src="/static/img/polindra.png", className="navbar-logo")),
         html.Div(html.Img(src="/static/img/polban.png", className="navbar-logo")),
-        html.Div("T&H OUTDOOR DASHBOARD", className="navbar-title"),
+        html.Div("EPS AC DASHBOARD", className="navbar-title"),
         dcc.Link(html.Img(src="/static/icon/gps.svg", className="gps-icon me-2"), href="/dash/gps"),
         dcc.Link(html.Img(src="/static/icon/notification.svg", className="notification-icon"), href="/dash/alarm"),
     ], className="d-flex justify-content-between align-items-center p-3 border-bottom navbar-full mb-1"),
@@ -30,53 +31,50 @@ th_out_layout = html.Div([
     # MAIN CONTENT
     html.Div([
         dbc.Row([
-            # LEFT SIDE - Parameter Cards and Greenhouse Image
+            # LEFT SIDE - Parameter Cards
             dbc.Col([
-                # Temperature and Humidity Cards in a row
+                # Voltage and Current Cards in a row
                 dbc.Row([
-                    # Temperature Card
+                    # Voltage Card
                     dbc.Col(
                         html.Div([
-                            html.Img(src="/static/icon/temperature.svg", className="param-icon me-2"),
-                            html.H5("TEMPERATURE", className="mb-2"),
-                            html.H3(id={'type': 'sensor-value', 'id': 'suhu-display-outdoor'}, className="fw-bold")
+                            html.Img(src="/static/icon/voltage.svg", className="param-icon me-2"),
+                            html.H5("VOLTAGE AC", className="mb-2"),
+                            html.H3(id="voltage-ac-display", className="fw-bold")
                         ], className="parameter-card p-3 h-100 border rounded"),
                     width=6),
                     
-                    # Humidity Card
+                    # Current Card
                     dbc.Col(
                         html.Div([
-                            html.Img(src="/static/icon/humidity.svg", className="param-icon me-2"),
-                            html.H5("HUMIDITY", className="mb-2"),
-                            html.H3(id={'type': 'sensor-value', 'id': 'kelembaban-display-outdoor'}, className="fw-bold")
+                            html.Img(src="/static/icon/current.svg", className="param-icon me-2"),
+                            html.H5("CURRENT AC", className="mb-2"),
+                            html.H3(id="current-ac-display", className="fw-bold")
                         ], className="parameter-card p-3 h-100 border rounded"),
                     width=6),
                 ], className="mb-3"),
                 
-                # Prediction Graphs Section
+                # Power Card (full width)
+                dbc.Row([
+                    dbc.Col(
+                        html.Div([
+                            html.Img(src="/static/icon/power.svg", className="param-icon me-2"),
+                            html.H5("POWER AC", className="mb-2"),
+                            html.H3(id="power-ac-display", className="fw-bold")
+                        ], className="parameter-card p-3 h-100 border rounded"),
+                    width=12),
+                ], className="mb-3"),
+                
+                # Voltage AC Graph (moved from right side)
                 html.Div([
-                    html.H5("PREDICTION GRAPHS (1-5 Minutes)", className="text-center mb-3"),
-                    
-                    # Temperature Prediction Graph
-                    html.Div([
-                        html.H6("Temperature Prediction", className="text-center mb-2"),
-                        dcc.Graph(
-                            id='temp-prediction-out-graph',
-                            config={"displayModeBar": False},
-                            style={'height': '97px'}
-                        )
-                    ], className="mb-3 p-2 border rounded bg-light"),
-                    
-                    # Humidity Prediction Graph
-                    html.Div([
-                        html.H6("Humidity Prediction", className="text-center mb-2"),
-                        dcc.Graph(
-                            id='humidity-prediction-out-graph',
-                            config={"displayModeBar": False},
-                            style={'height': '97px'}
-                        )
-                    ], className="mb-3 p-2 border rounded bg-light"),
-                ], className="prediction-container")
+                    html.H5("VOLTAGE AC TREND", className="text-center mb-2"),
+                    dcc.Graph(
+                        id='voltage-ac-graph',
+                        config={"displayModeBar": False},
+                        style={'height': '150px'}
+                    )
+                ], className="mb-3 p-2 border rounded bg-light"),
+                
             ], width=6, className="pe-3"),
             
            # RIGHT SIDE - Graphs and Table
@@ -85,21 +83,21 @@ th_out_layout = html.Div([
                     html.Div([
                         html.H5("REAL-TIME TREND", className="text-center mb-2"),
                         
-                        # Temperature Graph - Using a simple div wrapper
+                        # Current Graph
                         html.Div([
                             dcc.Graph(
-                                id='temp-graph-out',
+                                id='current-ac-graph',
                                 config={"displayModeBar": False},
-                                style={'height': '150px'}
+                                style={'height': '162px'}
                             )
-                        ]), 
+                        ]),
                         
-                        # Humidity Graph - Using a simple div wrapper
+                        # Power Graph
                         html.Div([
                             dcc.Graph(
-                                id='humidity-graph-out',
+                                id='power-ac-graph',
                                 config={"displayModeBar": False},
-                                style={'height': '150px'}
+                                style={'height': '162px'}
                             )
                         ]), 
                     ], className="mb-3 p-2 border rounded bg-light"),
@@ -108,11 +106,12 @@ th_out_layout = html.Div([
                 html.Div([
                     html.H5("HISTORICAL TABLE", className="text-center mb-2"),
                     dash_table.DataTable(
-                        id='historical-table-th-out',
+                        id='historical-table-eps-ac',
                         columns=[
                             {"name": "Time (m)", "id": "time"},
-                            {"name": "Temperature Out (°C)", "id": "temperature_out_historical"},
-                            {"name": "Humidity Out (%)", "id": "humidity_out_historical"}
+                            {"name": "Voltage AC (V)", "id": "voltage_ac_historical"},
+                            {"name": "Current AC (A)", "id": "current_ac_historical"},
+                            {"name": "Power AC (W)", "id": "power_ac_historical"}
                         ],
                         data=[
                             # Empty rows for demonstration
@@ -136,19 +135,18 @@ th_out_layout = html.Div([
                     )
                 ], className="mb-3 p-2 border rounded bg-light"),
                 
-                # Buttons
+                # Navigation Buttons
                 html.Div([
-                    # html.Button("SETTING", className="btn btn-secondary m-1"),
                     dcc.Link("MCS", href="/dash/", className="btn btn-secondary m-1"),
                     dcc.Link("PAR", href="/dash/par", className="btn btn-secondary m-1"),
                     dcc.Link("CO2", href="/dash/co2", className="btn btn-secondary m-1"),
                     dcc.Link("T&H INDOOR", href="/dash/th-in", className="btn btn-secondary m-1"),
+                    dcc.Link("T&H OUTDOOR", href="/dash/th-out", className="btn btn-secondary m-1"),
                     dcc.Link("WINDSPEED", href="/dash/windspeed", className="btn btn-secondary m-1"),
                     dcc.Link("RAINFALL", href="/dash/rainfall", className="btn btn-secondary m-1"),
-                    dcc.Link("EPS", href="/dash/eps", className="btn btn-secondary m-1"),
                     html.Button("LOGIN", id="login-button", className="btn btn-dark m-1"),
                     dcc.Location(id="login-redirect", refresh=True)  # Handles redirection
-                ], className="d-flex justify-content-end")
+                ], className="d-flex flex-wrap justify-content-end")
             ], width=6, className="ps-3")
         ])
     ], className="container"),
@@ -165,5 +163,5 @@ th_out_layout = html.Div([
     ], className="footer-section"),
     
     # Keep the interval component for data updates
-    dcc.Interval(id='interval_thout', interval=3000, n_intervals=0)
+    dcc.Interval(id='interval_eps_ac', interval=3000, n_intervals=0)
 ])

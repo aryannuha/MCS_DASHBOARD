@@ -262,15 +262,16 @@ engineer_alarm_layout = html.Div([
         # Button Section
         html.Div([
             # html.Button("SETTING", className="btn btn-secondary m-1"),
-            dcc.Link("MCS", href="/dash/", className="btn btn-secondary m-1"),
-            dcc.Link("T&H INDOOR", href="/dash/th-in", className="btn btn-secondary m-1"),
-            dcc.Link("PAR", href="/dash/par", className="btn btn-secondary m-1"),
-            dcc.Link("CO2", href="/dash/co2", className="btn btn-secondary m-1"),
-            dcc.Link("T&H OUTDOOR", href="/dash/th-out", className="btn btn-secondary m-1"),
-            dcc.Link("WINDSPEED", href="/dash/windspeed", className="btn btn-secondary m-1"),
-            dcc.Link("RAINFALL", href="/dash/rainfall", className="btn btn-secondary m-1"),
-            html.Button("LOGIN", id="login-button", className="btn btn-dark m-1"),
-            dcc.Location(id="login-redirect", refresh=True)  # Handles redirection
+            dcc.Link("MCS", href="/dash/engineer/", className="btn btn-secondary m-1"),
+            dcc.Link("T&H INDOOR", href="/dash/engineer/th-in", className="btn btn-secondary m-1"),
+            dcc.Link("PAR", href="/dash/engineer/par", className="btn btn-secondary m-1"),
+            dcc.Link("CO2", href="/dash/engineer/co2", className="btn btn-secondary m-1"),
+            dcc.Link("T&H OUTDOOR", href="/dash/engineer/th-out", className="btn btn-secondary m-1"),
+            dcc.Link("WINDSPEED", href="/dash/engineer/windspeed", className="btn btn-secondary m-1"),
+            dcc.Link("RAINFALL", href="/dash/engineer/rainfall", className="btn btn-secondary m-1"),
+            dcc.Link("EPS", href="/dash/engineer/eps", className="btn btn-secondary m-1"),
+            html.Button("LOGOUT", id="logout-button", className="btn btn-dark m-1"),
+            dcc.Location(id="logout-redirect", refresh=True)  # Handles redirection
         ], className="d-flex flex-wrap justify-content-end mb-4")
         
         # Empty card or additional parameter if needed

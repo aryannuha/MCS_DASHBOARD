@@ -53,6 +53,7 @@ from pages.windspeed import windspeed_layout
 from pages.rainfall import rainfall_layout  
 from pages.alarm import alarm_layout  
 from pages.gps import gps_layout  
+from pages.epsac import eps_ac_layout
 from engineer_pages.mcs_dashboard_eng import engineer_dashboard_layout
 from engineer_pages.co2_eng import engineer_co2_layout
 from engineer_pages.th_in_eng import engineer_th_in_layout
@@ -62,6 +63,7 @@ from engineer_pages.windspeed_eng import engineer_windspeed_layout
 from engineer_pages.rainfall_eng import engineer_rainfall_layout  
 from engineer_pages.alarm_eng import engineer_alarm_layout  
 from engineer_pages.gps_eng import engineer_gps_layout  
+from engineer_pages.epsac_eng import engineer_eps_ac_layout
 import os
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -90,6 +92,7 @@ pages = {
     "/dash/rainfall": rainfall_layout,
     "/dash/alarm": alarm_layout,
     "/dash/gps": gps_layout,
+    "/dash/eps": eps_ac_layout,
 }
 
 engineer_pages = {
@@ -102,6 +105,7 @@ engineer_pages = {
     "/dash/engineer/rainfall": engineer_rainfall_layout,
     "/dash/engineer/alarm": engineer_alarm_layout,
     "/dash/engineer/gps": engineer_gps_layout,
+    "/dash/engineer/eps": engineer_eps_ac_layout,
 }
 
 # Configure Flask-Login
@@ -429,7 +433,8 @@ LOCATIONS = [
     {"name": "Gedung Sate", "lat": -6.902454, "lon": 107.618881},
     {"name": "Dago Street", "lat": -6.893702, "lon": 107.613251},
     {"name": "Bandung Station", "lat": -6.914744, "lon": 107.602458},
-    {"name": "Paris Van Java Mall", "lat": -6.888771, "lon": 107.595337}
+    {"name": "Paris Van Java Mall", "lat": -6.888771, "lon": 107.595337},
+    {"name": "Lab Elektronika POLBAN", "lat": -6.8719638, "lon": 107.5723521},
 ]
 
 # Coordinates for a device path simulation
@@ -1805,6 +1810,288 @@ def update_par_dashboard(n):
         ))
         return "N/A", default_fig
 
+# Separate callback for eps_ac layout - Updated for EPS AC parameters
+@app_dash.callback(
+    [Output('voltage-ac-display', 'children'),
+     Output('current-ac-display', 'children'),
+     Output('power-ac-display', 'children'),
+     Output('voltage-ac-graph', 'figure'),
+     Output('current-ac-graph', 'figure'),
+     Output('power-ac-graph', 'figure'),
+     ],
+    [Input('interval_eps_ac', 'n_intervals')],
+    prevent_initial_call=True
+)
+def update_eps_ac_dashboard(n):
+    try:        
+        # Default values
+        voltage_ac_value = "N/A"
+        current_ac_value = "N/A"
+        power_ac_value = "N/A"
+        
+        # Empty figures with proper layout
+        empty_voltage_ac_fig = go.Figure(layout=dict(
+            title="Voltage AC Trend",
+            xaxis=dict(title="Time"),
+            yaxis=dict(title="Voltage AC (V)", range=[0, 250]),
+            margin=dict(l=40, r=20, t=40, b=30),
+            height=150,
+            plot_bgcolor='rgba(240, 240, 240, 0.9)'
+        ))
+        
+        empty_current_ac_fig = go.Figure(layout=dict(
+            title="Current AC Trend",
+            xaxis=dict(title="Time"),
+            yaxis=dict(title="Current AC (A)", range=[0, 4]),
+            margin=dict(l=40, r=20, t=40, b=30),
+            height=162,
+            plot_bgcolor='rgba(240, 240, 240, 0.9)'
+        ))
+
+        empty_power_ac_fig = go.Figure(layout=dict(
+            title="Power AC Trend",
+            xaxis=dict(title="Time"),
+            yaxis=dict(title="Power AC (W)", range=[0, 10]),
+            margin=dict(l=40, r=20, t=40, b=30),
+            height=162,
+            plot_bgcolor='rgba(240, 240, 240, 0.9)'
+        ))
+        
+        # Check if we have data
+        if not data['kodeData0911'] or not data['kodeData0912'] or not data['kodeData0913'] or not data['waktu']:
+            return voltage_ac_value, current_ac_value, power_ac_value, empty_voltage_ac_fig, empty_current_ac_fig, empty_power_ac_fig
+        
+        # Get the latest values
+        voltage_ac = data['kodeData0911'][-1] if data['kodeData0911'] else DEFAULT_VALUES.get('kodeData0911', 0)
+        current_ac = data['kodeData0912'][-1] if data['kodeData0912'] else DEFAULT_VALUES.get('kodeData0912', 0)
+        power_ac = data['kodeData0913'][-1] if data['kodeData0913'] else DEFAULT_VALUES.get('kodeData0913', 0)
+        
+        voltage_ac_value = f"{voltage_ac} V"
+        current_ac_value = f"{current_ac} A"
+        power_ac_value = f"{power_ac} W"
+        
+        # Create voltage AC graph
+        voltage_ac_fig = go.Figure()
+
+        try:
+            # Ensure we have data to work with
+            if len(data['waktu']) > 3 and len(data['kodeData0911']) > 3:
+                # We'll use only 4 data points for simplicity
+                num_points = 4
+                
+                # Select evenly spaced indices from the data
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0911']))-1, num_points, dtype=int)
+                
+                # Get the selected timestamps and voltage values
+                selected_timestamps = [data['waktu'][i] for i in indices]
+                selected_values = [data['kodeData0911'][i] for i in indices]
+                
+                # Create x values (0, 1, 2, 3) for plotting
+                x_plot = list(range(num_points))
+                
+                # Add the simplified line
+                voltage_ac_fig.add_trace(go.Scatter(
+                    x=x_plot,
+                    y=selected_values,
+                    mode='lines',
+                    line=dict(color='#FF6B35', width=3, shape='spline', smoothing=1.3),
+                    fill='tozeroy',
+                    fillcolor='rgba(255, 107, 53, 0.2)',
+                    showlegend=False
+                ))
+                
+                # Set up the axis with only 4 ticks
+                voltage_ac_fig.update_layout(
+                    title="Voltage AC Trend",
+                    xaxis=dict(
+                        title="Time",
+                        tickmode='array',
+                        tickvals=x_plot,
+                        ticktext=selected_timestamps,
+                        tickangle=0
+                    ),
+                    yaxis=dict(title="Voltage AC (V)", range=[0, 250]),
+                    margin=dict(l=40, r=20, t=40, b=30),
+                    height=150,
+                    plot_bgcolor='rgba(250, 250, 250, 0.9)',
+                    showlegend=False
+                )
+                
+            else:
+                # Fallback for insufficient data
+                voltage_ac_fig.add_trace(go.Scatter(
+                    x=[0, 1],
+                    y=[0, 0],
+                    mode='lines',
+                    line=dict(color='#FF6B35', width=3),
+                    showlegend=False
+                ))
+                voltage_ac_fig.update_layout(
+                    title="Voltage AC Trend - Insufficient Data",
+                    xaxis=dict(title="Time"),
+                    yaxis=dict(title="Voltage AC (V)", range=[0, 250]),
+                    height=150,
+                    showlegend=False
+                )
+                
+        except Exception as e:
+            print(f"Error creating voltage AC graph: {e}")
+            voltage_ac_fig = empty_voltage_ac_fig
+
+        # Create current AC graph
+        current_ac_fig = go.Figure()
+
+        try:
+            # Ensure we have data to work with
+            if len(data['waktu']) > 3 and len(data['kodeData0912']) > 3:
+                # We'll use only 4 data points for simplicity
+                num_points = 4
+                
+                # Select evenly spaced indices from the data
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0912']))-1, num_points, dtype=int)
+                
+                # Get the selected timestamps and current values
+                selected_timestamps = [data['waktu'][i] for i in indices]
+                selected_values = [data['kodeData0912'][i] for i in indices]
+                
+                # Create x values (0, 1, 2, 3) for plotting
+                x_plot = list(range(num_points))
+                
+                # Add the simplified line
+                current_ac_fig.add_trace(go.Scatter(
+                    x=x_plot,
+                    y=selected_values,
+                    mode='lines',
+                    line=dict(color='#4ECDC4', width=3, shape='spline', smoothing=1.3),
+                    fill='tozeroy',
+                    fillcolor='rgba(78, 205, 196, 0.2)',
+                    showlegend=False
+                ))
+                
+                # Set up the axis with only 4 ticks
+                current_ac_fig.update_layout(
+                    title="Current AC Trend",
+                    xaxis=dict(
+                        title="Time",
+                        tickmode='array',
+                        tickvals=x_plot,
+                        ticktext=selected_timestamps,
+                        tickangle=0
+                    ),
+                    yaxis=dict(title="Current AC (A)", range=[0, 4]),
+                    margin=dict(l=40, r=20, t=40, b=30),
+                    height=162,
+                    plot_bgcolor='rgba(250, 250, 250, 0.9)',
+                    showlegend=False
+                )
+                
+            else:
+                # Fallback for insufficient data
+                current_ac_fig.add_trace(go.Scatter(
+                    x=[0, 1],
+                    y=[0, 0],
+                    mode='lines',
+                    line=dict(color='#4ECDC4', width=3),
+                    showlegend=False
+                ))
+                current_ac_fig.update_layout(
+                    title="Current AC Trend - Insufficient Data",
+                    xaxis=dict(title="Time"),
+                    yaxis=dict(title="Current AC (A)", range=[0, 4]),
+                    height=162,
+                    showlegend=False
+                )
+                
+        except Exception as e:
+            print(f"Error creating current AC graph: {e}")
+            current_ac_fig = empty_current_ac_fig
+
+        # Create power AC graph
+        power_ac_fig = go.Figure()
+
+        try:
+            # Ensure we have data to work with
+            if len(data['waktu']) > 3 and len(data['kodeData0913']) > 3:
+                # We'll use only 4 data points for simplicity
+                num_points = 4
+                
+                # Select evenly spaced indices from the data
+                indices = np.linspace(0, min(len(data['waktu']), len(data['kodeData0913']))-1, num_points, dtype=int)
+                
+                # Get the selected timestamps and power values
+                selected_timestamps = [data['waktu'][i] for i in indices]
+                selected_values = [data['kodeData0913'][i] for i in indices]
+                
+                # Create x values (0, 1, 2, 3) for plotting
+                x_plot = list(range(num_points))
+                
+                # Add the simplified line
+                power_ac_fig.add_trace(go.Scatter(
+                    x=x_plot,
+                    y=selected_values,
+                    mode='lines',
+                    line=dict(color='#A8E6CF', width=3, shape='spline', smoothing=1.3),
+                    fill='tozeroy',
+                    fillcolor='rgba(168, 230, 207, 0.2)',
+                    showlegend=False
+                ))
+                
+                # Set up the axis with only 4 ticks
+                power_ac_fig.update_layout(
+                    title="Power AC Trend",
+                    xaxis=dict(
+                        title="Time",
+                        tickmode='array',
+                        tickvals=x_plot,
+                        ticktext=selected_timestamps,
+                        tickangle=0
+                    ),
+                    yaxis=dict(title="Power AC (W)", range=[0, 10]),
+                    margin=dict(l=40, r=20, t=40, b=30),
+                    height=162,
+                    plot_bgcolor='rgba(250, 250, 250, 0.9)',
+                    showlegend=False
+                )
+                
+            else:
+                # Fallback for insufficient data
+                power_ac_fig.add_trace(go.Scatter(
+                    x=[0, 1],
+                    y=[0, 0],
+                    mode='lines',
+                    line=dict(color='#A8E6CF', width=3),
+                    showlegend=False
+                ))
+                power_ac_fig.update_layout(
+                    title="Power AC Trend - Insufficient Data",
+                    xaxis=dict(title="Time"),
+                    yaxis=dict(title="Power AC (W)", range=[0, 10]),
+                    height=162,
+                    showlegend=False
+                )
+                
+        except Exception as e:
+            print(f"Error creating power AC graph: {e}")
+            power_ac_fig = empty_power_ac_fig
+        
+        return voltage_ac_value, current_ac_value, power_ac_value, voltage_ac_fig, current_ac_fig, power_ac_fig
+    
+    except Exception as e:
+        print(f"Error in update_eps_ac_dashboard: {e}")
+        # Return default values if there's an error
+        default_fig = go.Figure(layout=dict(
+            title="Data Unavailable",
+            annotations=[dict(
+                text="Error loading data",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False
+            )]
+        ))
+        return "N/A", "N/A", "N/A", default_fig, default_fig, default_fig
+    
 # Callbacks to update the realtime table
 @app_dash.callback(
     Output('realtime-table', 'data'),
@@ -3262,7 +3549,57 @@ def update_co2_historical_table(n):
     except Exception as e:
         print(f"An error occurred while updating the historical table: {e}")
         return [] # Return empty data on any other error
-    
+
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN co2.py
+@app_dash.callback(
+    Output('historical-table-eps-ac', 'data'),
+    Input('interval_eps_ac', 'n_intervals')
+)
+def update_co2_historical_table(n):
+    try:
+        # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+
+        # 2. Open the spreadsheet and select the first sheet
+        sheet = client.open("microclimate_database").sheet1
+
+        # 3. Get all data, excluding the header row
+        records = sheet.get_all_records()
+        
+        # 4. If there's no data, return an empty list
+        if not records:
+            return []
+
+        # 5. Get the last 20 records for display and reverse them to show the latest on top
+        latest_records = records[-20:]
+        latest_records.reverse()
+
+        # 6. Format the data to match the DataTable column IDs
+        #    Spreadsheet columns: 'Time', 'Temp In', 'Humid In'
+        #    DataTable columns: 'time', 'temperature_in_historical', 'humidity_in_historical'
+        table_data = []
+        for row in latest_records:
+            # Extract only the time part (e.g., '21:00') from the full datetime string
+            time_value = str(row.get('Time', ''))
+
+            table_data.append({
+                'time': time_value,
+                'voltage_ac_historical': row.get('Voltage AC'),
+                'current_ac_historical': row.get('Current AC'),
+                'power_ac_historical': row.get('Power AC'),
+            })
+            
+        return table_data
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("Error: Spreadsheet 'microclimate_database' not found. Check the name and sharing permissions.")
+        return [] # Return empty data to prevent the app from crashing
+    except Exception as e:
+        print(f"An error occurred while updating the historical table: {e}")
+        return [] # Return empty data on any other error
+   
 # Run server
 if __name__ == '__main__':
     server.run(server.run(host='0.0.0.0', port=5000))

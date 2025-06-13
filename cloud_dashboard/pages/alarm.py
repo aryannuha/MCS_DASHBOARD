@@ -269,6 +269,7 @@ alarm_layout = html.Div([
             dcc.Link("T&H OUTDOOR", href="/dash/th-out", className="btn btn-secondary m-1"),
             dcc.Link("WINDSPEED", href="/dash/windspeed", className="btn btn-secondary m-1"),
             dcc.Link("RAINFALL", href="/dash/rainfall", className="btn btn-secondary m-1"),
+            dcc.Link("EPS", href="/dash/eps", className="btn btn-secondary m-1"),
             html.Button("LOGIN", id="login-button", className="btn btn-dark m-1"),
             dcc.Location(id="login-redirect", refresh=True)  # Handles redirection
         ], className="d-flex flex-wrap justify-content-end mb-4")
