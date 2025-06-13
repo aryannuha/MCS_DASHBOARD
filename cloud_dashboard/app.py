@@ -3550,12 +3550,12 @@ def update_co2_historical_table(n):
         print(f"An error occurred while updating the historical table: {e}")
         return [] # Return empty data on any other error
 
-# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN co2.py
+# CALLBACK TO UPDATE THE HISTORICAL DATA TABLE IN epsac.py
 @app_dash.callback(
     Output('historical-table-eps-ac', 'data'),
     Input('interval_eps_ac', 'n_intervals')
 )
-def update_co2_historical_table(n):
+def update_eps_ac_historical_table(n):
     try:
         # 1. Authenticate with Google Sheets (ensure 'credentials.json' is in your root directory)
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
