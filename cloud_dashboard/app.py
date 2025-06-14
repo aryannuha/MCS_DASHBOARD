@@ -1835,16 +1835,16 @@ def update_eps_ac_dashboard(n):
             xaxis=dict(title="Time"),
             yaxis=dict(title="Voltage AC (V)", range=[0, 250]),
             margin=dict(l=40, r=20, t=40, b=30),
-            height=150,
+            height=190,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
         ))
         
         empty_current_ac_fig = go.Figure(layout=dict(
             title="Current AC Trend",
             xaxis=dict(title="Time"),
-            yaxis=dict(title="Current AC (A)", range=[0, 4]),
+            yaxis=dict(title="Current AC (A)", range=[0, 2]),
             margin=dict(l=40, r=20, t=40, b=30),
-            height=162,
+            height=190,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
         ))
 
@@ -1853,7 +1853,7 @@ def update_eps_ac_dashboard(n):
             xaxis=dict(title="Time"),
             yaxis=dict(title="Power AC (W)", range=[0, 10]),
             margin=dict(l=40, r=20, t=40, b=30),
-            height=162,
+            height=190,
             plot_bgcolor='rgba(240, 240, 240, 0.9)'
         ))
         
@@ -1912,7 +1912,7 @@ def update_eps_ac_dashboard(n):
                     ),
                     yaxis=dict(title="Voltage AC (V)", range=[0, 250]),
                     margin=dict(l=40, r=20, t=40, b=30),
-                    height=150,
+                    height=190,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
                     showlegend=False
                 )
@@ -1930,7 +1930,7 @@ def update_eps_ac_dashboard(n):
                     title="Voltage AC Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
                     yaxis=dict(title="Voltage AC (V)", range=[0, 250]),
-                    height=150,
+                    height=190,
                     showlegend=False
                 )
                 
@@ -1962,7 +1962,7 @@ def update_eps_ac_dashboard(n):
                     x=x_plot,
                     y=selected_values,
                     mode='lines',
-                    line=dict(color='#4ECDC4', width=3, shape='spline', smoothing=1.3),
+                    line=dict(color="#0011FF", width=3, shape='spline', smoothing=1.3),
                     fill='tozeroy',
                     fillcolor='rgba(78, 205, 196, 0.2)',
                     showlegend=False
@@ -1978,9 +1978,9 @@ def update_eps_ac_dashboard(n):
                         ticktext=selected_timestamps,
                         tickangle=0
                     ),
-                    yaxis=dict(title="Current AC (A)", range=[0, 4]),
+                    yaxis=dict(title="Current AC (A)", range=[0, 2]),
                     margin=dict(l=40, r=20, t=40, b=30),
-                    height=162,
+                    height=190,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
                     showlegend=False
                 )
@@ -1991,14 +1991,14 @@ def update_eps_ac_dashboard(n):
                     x=[0, 1],
                     y=[0, 0],
                     mode='lines',
-                    line=dict(color='#4ECDC4', width=3),
+                    line=dict(color='#0011FF', width=3),
                     showlegend=False
                 ))
                 current_ac_fig.update_layout(
                     title="Current AC Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
-                    yaxis=dict(title="Current AC (A)", range=[0, 4]),
-                    height=162,
+                    yaxis=dict(title="Current AC (A)", range=[0, 2]),
+                    height=190,
                     showlegend=False
                 )
                 
@@ -2030,7 +2030,7 @@ def update_eps_ac_dashboard(n):
                     x=x_plot,
                     y=selected_values,
                     mode='lines',
-                    line=dict(color='#A8E6CF', width=3, shape='spline', smoothing=1.3),
+                    line=dict(color="#FF0000", width=3, shape='spline', smoothing=1.3),
                     fill='tozeroy',
                     fillcolor='rgba(168, 230, 207, 0.2)',
                     showlegend=False
@@ -2048,7 +2048,7 @@ def update_eps_ac_dashboard(n):
                     ),
                     yaxis=dict(title="Power AC (W)", range=[0, 10]),
                     margin=dict(l=40, r=20, t=40, b=30),
-                    height=162,
+                    height=190,
                     plot_bgcolor='rgba(250, 250, 250, 0.9)',
                     showlegend=False
                 )
@@ -2059,14 +2059,14 @@ def update_eps_ac_dashboard(n):
                     x=[0, 1],
                     y=[0, 0],
                     mode='lines',
-                    line=dict(color='#A8E6CF', width=3),
+                    line=dict(color='#FF0000', width=3),
                     showlegend=False
                 ))
                 power_ac_fig.update_layout(
                     title="Power AC Trend - Insufficient Data",
                     xaxis=dict(title="Time"),
                     yaxis=dict(title="Power AC (W)", range=[0, 10]),
-                    height=162,
+                    height=190,
                     showlegend=False
                 )
                 
