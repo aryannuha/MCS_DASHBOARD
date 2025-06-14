@@ -65,44 +65,7 @@ engineer_eps_ac_layout = html.Div([
                     width=12),
                 ], className="mb-3"),
                 
-                # Voltage AC Graph (moved from right side)
-                html.Div([
-                    html.H5("VOLTAGE AC TREND", className="text-center mb-2"),
-                    dcc.Graph(
-                        id='voltage-ac-graph',
-                        config={"displayModeBar": False},
-                        style={'height': '150px'}
-                    )
-                ], className="mb-3 p-2 border rounded bg-light"),
-                
-            ], width=6, className="pe-3"),
-            
-           # RIGHT SIDE - Graphs and Table
-                dbc.Col([
-                    # Real-time Trend Graphs with clear IDs and sufficient height
-                    html.Div([
-                        html.H5("REAL-TIME TREND", className="text-center mb-2"),
-                        
-                        # Current Graph
-                        html.Div([
-                            dcc.Graph(
-                                id='current-ac-graph',
-                                config={"displayModeBar": False},
-                                style={'height': '162px'}
-                            )
-                        ]),
-                        
-                        # Power Graph
-                        html.Div([
-                            dcc.Graph(
-                                id='power-ac-graph',
-                                config={"displayModeBar": False},
-                                style={'height': '162px'}
-                            )
-                        ]), 
-                    ], className="mb-3 p-2 border rounded bg-light"),
-                
-                # Historical Data Table
+                # Historical Table Section
                 html.Div([
                     html.H5("HISTORICAL TABLE", className="text-center mb-2"),
                     dash_table.DataTable(
@@ -134,6 +97,42 @@ engineer_eps_ac_layout = html.Div([
                         ]
                     )
                 ], className="mb-3 p-2 border rounded bg-light"),
+                
+            ], width=6, className="pe-3"),
+            
+           # RIGHT SIDE - Graphs and Table
+                dbc.Col([
+                    # Real-time Trend Graphs with clear IDs and sufficient height
+                    html.Div([
+                        html.H5("REAL-TIME TREND", className="text-center mb-2"),
+                        
+                        # Voltage AC Graph
+                        html.Div([
+                            dcc.Graph(
+                                id='voltage-ac-graph',
+                                config={"displayModeBar": False},
+                                style={'height': '190px'}
+                            )
+                        ]),
+
+                        # Current Graph
+                        html.Div([
+                            dcc.Graph(
+                                id='current-ac-graph',
+                                config={"displayModeBar": False},
+                                style={'height': '190px'}
+                            )
+                        ]),
+                        
+                        # Power Graph
+                        html.Div([
+                            dcc.Graph(
+                                id='power-ac-graph',
+                                config={"displayModeBar": False},
+                                style={'height': '190px'}
+                            )
+                        ]), 
+                    ], className="mb-3 p-2 border rounded bg-light"),
                 
                 # Navigation Buttons
                 html.Div([
